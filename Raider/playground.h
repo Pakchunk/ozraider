@@ -18,7 +18,7 @@ public:
         if (Playlist)
         {
             Playlist->bNoDBNO = true;
-            Playlist->FriendlyFireType = EFriendlyFireType::Off;
+            Playlist->FriendlyFireType = EFriendlyFireType::On;
             Playlist->RespawnType = EAthenaRespawnType::InfiniteRespawn;
             Playlist->RespawnLocation = EAthenaRespawnLocation::Air;
 
@@ -27,9 +27,9 @@ public:
         }
     }
 
-    void OnDeath(AFortPlayerControllerAthena* PC, FVector NewLocation)
+    void DroneAnimEnded(AFortPlayerControllerAthena* PC, FVector NewLocation)
     {
-        NewLocation.Z += 20000;
+        NewLocation.Z += 4000;
 
         if (PC->Pawn)
             PC->Pawn->K2_DestroyActor();
@@ -41,5 +41,19 @@ public:
         PC->RespawnPlayerAfterDeath();
         CM->RespawnPlayer();
         CM->RespawnPlayerServer();
+    }
+
+    void OnDeath(AFortPlayerPawnAthena* KillerPawn)
+    {
+        if (KillerPawn && !KillerPawn->IsDead())
+        {
+            int HealthToGive = 50;
+            if (KillerPawn->GetHealth() > 50)
+            {
+                HealthToGive = KillerPawn->GetMaxHealth() - KillerPawn->GetHealth();
+            }
+
+            KillerPawn->SetHealth(KillerPawn->GetHealth() + HealthToGive);
+        }
     }
 };

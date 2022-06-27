@@ -77,12 +77,8 @@ namespace Hooks
 
         constexpr static auto Health = 100;
         const static auto Shield = 100;
-
         Pawn->SetMaxHealth(Health);
         Pawn->SetMaxShield(Shield);
-
-        Pawn->HealthRegenGameplayEffect = nullptr;
-        Pawn->HealthRegenDelayGameplayEffect = nullptr;
 
         PlayerController->bHasClientFinishedLoading = true; // should we do this on ServerSetClientHasFinishedLoading 
         PlayerController->bHasServerFinishedLoading = true;
@@ -101,55 +97,49 @@ namespace Hooks
 
             if (Hero)
             {
-                PlayerState->HeroType = Hero->GetHeroTypeBP();
-                PlayerState->OnRep_HeroType();
-
-                for (auto i = 0; i < Hero->CharacterParts.Num(); i++)
+                if (bCosmetics)
                 {
-                    auto Part = Hero->CharacterParts[i];
+                    PlayerState->HeroType = Hero->GetHeroTypeBP();
+                    PlayerState->OnRep_HeroType();
 
-                    if (!Part)
-                        continue;
+                    for (auto i = 0; i < Hero->CharacterParts.Num(); i++)
+                    {
+                        auto Part = Hero->CharacterParts[i];
 
-                    PlayerState->CharacterParts[i] = Part;
+                        if (!Part)
+                            continue;
+
+                        PlayerState->CharacterParts[i] = Part;
+                    }
+
+                    PlayerState->CharacterBodyType = Hero->CharacterParts[1]->BodyTypesPermitted;
+                    Pawn->CharacterBodyType = Hero->CharacterParts[1]->BodyTypesPermitted;
+                    Pawn->CharacterGender = Hero->CharacterParts[1]->GenderPermitted;
+                    PlayerState->OnRep_CharacterBodyType();
+                    PlayerState->OnRep_CharacterParts();
                 }
+                else
+                {
+                    UFortHeroType* HeroType = Hero->GetHeroTypeBP(); // UObject::FindObject<UFortHeroType>("FortHeroType HID_Outlander_015_F_V1_SR_T04.HID_Outlander_015_F_V1_SR_T04");
+                    PlayerState->HeroType = HeroType;
+                    PlayerState->OnRep_HeroType();
 
-                PlayerState->CharacterBodyType = Hero->CharacterParts[1]->BodyTypesPermitted;
-                Pawn->CharacterBodyType = Hero->CharacterParts[1]->BodyTypesPermitted;
-                Pawn->CharacterGender = Hero->CharacterParts[1]->GenderPermitted;
-                PlayerState->OnRep_CharacterBodyType();
-                PlayerState->OnRep_CharacterParts();
+                    static auto Head = UObject::FindObject<UCustomCharacterPart>("CustomCharacterPart F_Med_Head1.F_Med_Head1");
+                    static auto Body = UObject::FindObject<UCustomCharacterPart>("CustomCharacterPart F_Med_Soldier_01.F_Med_Soldier_01");
+
+                    PlayerState->CharacterParts[(uint8_t)EFortCustomPartType::Head] = Head;
+                    PlayerState->CharacterParts[(uint8_t)EFortCustomPartType::Body] = Body;
+                    PlayerState->OnRep_CharacterParts();
+                }
             }
         }
 
-
-        /*
-        if (FortRegisteredPlayerInfo)
-        {
-            auto Hero = FortRegisteredPlayerInfo->AthenaMenuHeroDef;
-
-            if (Hero)
-            {
-                UFortHeroType* HeroType = Hero->GetHeroTypeBP(); // UObject::FindObject<UFortHeroType>("FortHeroType HID_Outlander_015_F_V1_SR_T04.HID_Outlander_015_F_V1_SR_T04");
-                PlayerState->HeroType = HeroType;
-                PlayerState->OnRep_HeroType();
-
-                static auto Head = UObject::FindObject<UCustomCharacterPart>("CustomCharacterPart F_Med_Head1.F_Med_Head1");
-                static auto Body = UObject::FindObject<UCustomCharacterPart>("CustomCharacterPart F_Med_Soldier_01.F_Med_Soldier_01");
-
-				PlayerState->CharacterParts[(uint8_t)EFortCustomPartType::Head] = Head;
-                PlayerState->CharacterParts[(uint8_t)EFortCustomPartType::Body] = Body;
-                PlayerState->OnRep_CharacterParts();
-            }
-        }
-        */
-
-        std::string PickaxePool[42] = {
+        static std::string PickaxePool[42] = {
             "WID_Harvest_Pickaxe_Prismatic"
             "WID_Harvest_Pickaxe_Anchor_Athena",
             "WID_Harvest_Pickaxe_ArtDeco",
             "WID_Harvest_Pickaxe_Assassin",
-            "WID_Harvest_Pickaxe_Athena_C_T01",
+            "WID_Harvest_Pickaxe_Assassin",
             "WID_Harvest_Pickaxe_BoltOn_Athena_C_T01",
             "WID_Harvest_Pickaxe_Brite",
             "WID_Harvest_Pickaxe_Carrot",
@@ -189,88 +179,90 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Teslacoil_Athena",
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
-        static std::vector<UFortWeaponRangedItemDefinition*> DoublePumpLoadout = {
-            FindWID("WID_Harvest_Pickaxe_Athena_C_T01"),
-            FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
-            FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
-            FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
-            FindWID("WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03"),
-            FindWID("Athena_Shields")
-        };
 
-        static std::vector<UFortWeaponRangedItemDefinition*> DoubleTacLoadout = {
-            FindWID("WID_Harvest_Pickaxe_Athena_C_T01"),
-            FindWID("WID_Shotgun_SemiAuto_Athena_VR_Ore_T03"),
-            FindWID("WID_Assault_SemiAuto_Athena_R_Ore_T03"),
-            FindWID("WID_Assault_SemiAuto_Athena_R_Ore_T03"),
-            FindWID("WID_Pistol_HandCannon_Athena_SR_Ore_T03"),
-            FindWID("Athena_PurpleStuff")
-        };
-
-        //srand(time(0));
-        int Index = Index = rand() % 42;
+        static int Index = Index = rand() % 42;
+        if (Index == 42)
+            Index -= 2;
         std::cout << Index << ": Pickaxe Index\n";
 
-        static std::vector<UFortWeaponRangedItemDefinition*> JeppyLoadout = {
-            FindWID(PickaxePool[Index]),
-            FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
-            FindWID("WID_Pistol_Scavenger_Athena_R_Ore_T03"),
-            FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
-            //FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
-            //FindWID("WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03"),
-            FindWID("Athena_KnockGrenade"),
-            FindWID("Athena_PurpleStuff")
-        };
+        static UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
 
-        int random = rand() % 101;
-        std::vector<UFortWeaponRangedItemDefinition*> Loadout;
-        if (random % 2 == 0)
+        switch (loadoutToUse)
         {
-            Loadout = DoublePumpLoadout;
+            case WeaponLoadout::REGULAR:
+            {
+                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                {
+                    Pickaxe,
+                    FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
+                    FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03"),
+                    //FindWID("WID_Pistol_Scavenger_Athena_R_Ore_T03"),
+                    FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
+                    FindWID("Athena_KnockGrenade"),
+                    FindWID("Athena_PurpleStuff")
+                };
+                EquipLoadout(PlayerController, FortLoadout);
+                break;
+            }
+            case WeaponLoadout::EXPLOSIVES:
+            {
+                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                {
+                    Pickaxe,
+                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
+                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
+                    FindWID("WID_Launcher_Grenade_Athena_SR_Ore_T03"),
+                    FindWID("Athena_C4"),
+                    FindWID("Athena_PurpleStuff")
+                };
+                EquipLoadout(PlayerController, FortLoadout);
+                break;
+            }
+            case WeaponLoadout::SNIPERS:
+            {
+                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                {
+                    Pickaxe,
+                    FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03"),
+                    FindWID("WID_Sniper_Standard_Scope_Athena_SR_Ore_T03"),
+                    FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03"),
+                    FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03"),
+                    FindWID("Athena_PurpleStuff")
+                };
+                EquipLoadout(PlayerController, FortLoadout);
+                break;
+            }
         }
-        else
-        {
-            Loadout = DoubleTacLoadout;
-        }
-
-        EquipLoadout(PlayerController, JeppyLoadout);
 
         auto CheatManager = CreateCheatManager(PlayerController);
         CheatManager->ToggleInfiniteAmmo();
         CheatManager->ToggleInfiniteDurability();
-
         if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase == EAthenaGamePhase::Warmup)
-        {
             CheatManager->God();
-        }
 
         if (PlayerController->Pawn)
         {
             if (PlayerController->Pawn->PlayerState)
             {
-                PlayerState->TeamIndex = EFortTeam((rand() % 101));
+                static int TeamIndex = RandomIntInRange(2, 102);
+                PlayerState->TeamIndex = EFortTeam(TeamIndex);
                 PlayerState->OnRep_PlayerTeam();
-                //PlayerState->SquadId = PlayerState->PlayerTeam->TeamMembers.Num() + 1;
-                //PlayerState->OnRep_SquadId();
             }
         }
 
-        PlayerController->OverriddenBackpackSize = 100; // i hate stw
-
-		// TODO: Remove healing GameplayEffects
-
-        // Pawn->K2_TeleportTo({ 37713, -52942, 461 }, { 0, 0, 0 }); // Tilted
+        PlayerController->OverriddenBackpackSize = 100;
 
         return PlayerController;
     }
 
     void Beacon_NotifyControlMessage(AOnlineBeaconHost* Beacon, UNetConnection* Connection, uint8 MessageType, int64* Bunch)
     {
+
         if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase != EAthenaGamePhase::Warmup)
         {
             KickController(Connection->PlayerController, L"Game has already started.");
             //Connection->PlayerController
-            printf("[Raider] Player tried to join, but cannot because the game has already started.\n");
+            printf("LogRaider: Player tried to join, but cannot because the game has already started.\n");
             return;
         }
 
@@ -375,206 +367,6 @@ namespace Hooks
             }
         }
 
-        /*
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied")
-        {
-            auto Params = (AFortPlayerControllerZone_ClientOnPawnDied_Params*)Parameters;
-
-            auto DeadPC = static_cast<AFortPlayerControllerAthena*>(Object);
-            auto DeadPlayerState = static_cast<AFortPlayerStateAthena*>(DeadPC->PlayerState);
-
-            auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
-            GameState->PlayersLeft--;
-            GameState->OnRep_PlayersLeft();
-
-            if (Params && DeadPC)
-            {
-                auto GameMode = static_cast<AFortGameModeAthena*>(GameState->AuthorityGameMode);
-
-                auto KillerPlayerState = static_cast<AFortPlayerStateAthena*>(Params->DeathReport.KillerPlayerState);
-
-                SpawnActor<ABP_VictoryDrone_C>(DeadPC->Pawn->K2_GetActorLocation())->PlaySpawnOutAnim();
-                DeadPC->Pawn->K2_DestroyActor();
-                GameState->PlayerArray.RemoveSingle(DeadPC->NetPlayerIndex);
-
-                FDeathInfo DeathData;
-                DeathData.bDBNO = false;
-                DeathData.DeathLocation = DeadPC->Pawn->K2_GetActorLocation();
-                DeathData.Distance = Params->DeathReport.KillerPawn ? Params->DeathReport.KillerPawn->GetDistanceTo(DeadPC->Pawn) : 0;
-
-                DeathData.DeathCause = KillerPlayerState ? EDeathCause::Sniper : EDeathCause::FallDamage; // TODO: Determine what the actual death cause was.
-                DeathData.FinisherOrDowner = KillerPlayerState ? KillerPlayerState : DeadPlayerState;
-
-                DeadPlayerState->DeathInfo = DeathData;
-                DeadPlayerState->OnRep_DeathInfo();
-
-                if (KillerPlayerState)
-                {
-                    KillerPlayerState->KillScore++;
-                    KillerPlayerState->TeamKillScore++;
-
-                    KillerPlayerState->ClientReportKill(DeadPlayerState);
-                    KillerPlayerState->OnRep_Kills();
-
-                    Spectate(DeadPC->NetConnection, KillerPlayerState);
-                }
-
-                if (GameState->PlayersLeft == 1)
-                {
-                    TArray<AFortPlayerPawn*> OutActors;
-                    GetFortKismet()->STATIC_GetAllFortPlayerPawns(GetWorld(), &OutActors);
-
-                    auto Winner = OutActors[0];
-                    auto Controller = static_cast<AFortPlayerControllerAthena*>(Winner->Controller);
-
-                    if (!Controller->bClientNotifiedOfWin)
-                    {
-                        GameState->WinningPlayerName = Controller->PlayerState->GetPlayerName();
-                        GameState->OnRep_WinningPlayerName();
-
-                        Controller->PlayWinEffects();
-                        Controller->ClientNotifyWon();
-
-                        Controller->ClientGameEnded(Winner, true);
-                        GameMode->ReadyToEndMatch();
-                        GameMode->EndMatch();
-                    }
-                    OutActors.FreeArray();
-                }
-
-                if (GameState->PlayersLeft <= 1)
-                {
-                    TArray<AFortPlayerPawn*> OutActors;
-                    GetFortKismet()->STATIC_GetAllFortPlayerPawns(GetWorld(), &OutActors);
-                    auto RandomTarget = OutActors[rand() % OutActors.Num()];
-
-                    Spectate(DeadPC->NetConnection, static_cast<AFortPlayerStateAthena*>(RandomTarget->Controller->PlayerState));
-                    OutActors.FreeArray();
-                }
-            }
-        }
-        */
-
-        /*
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied")
-        {
-            auto Params = static_cast<AFortPlayerControllerZone_ClientOnPawnDied_Params*>(Parameters);
-            auto DeadPC = (AFortPlayerControllerAthena*)Object;
-
-            if (DeadPC && Params)
-            {
-                auto DeadPlayerState = (AFortPlayerStateAthena*)DeadPC->PlayerState;
-                auto KillerPawn = Params->DeathReport.KillerPawn;
-                auto KillerPlayerState = (AFortPlayerStateAthena*)Params->DeathReport.KillerPlayerState;
-                GameState->PlayersLeft--;
-                GameState->OnRep_PlayersLeft();
-                FVector DeadPawnLocation = DeadPC->Pawn->K2_GetActorLocation();
-                SpawnActor(ABP_VictoryDrone_C::StaticClass(), DeadPawnLocation);
-
-                DeadPC->Pawn->K2_DestroyActor();
-                GameState->PlayerArray.RemoveSingle(DeadPC->NetPlayerIndex);
-
-                FDeathInfo deathInfo;
-                deathInfo.bDBNO = false;
-                deathInfo.DeathLocation = DeadPawnLocation;
-                deathInfo.Distance = KillerPawn ? KillerPawn->GetDistanceTo(DeadPC->Pawn) : 0;
-                deathInfo.DeathCause = KillerPlayerState ? EDeathCause::Sniper : EDeathCause::FallDamage;
-                deathInfo.FinisherOrDowner = KillerPlayerState ? KillerPlayerState : DeadPlayerState;
-                DeadPlayerState->DeathInfo = deathInfo;
-                DeadPlayerState->OnRep_DeathInfo();
-
-                if (KillerPlayerState && KillerPawn)
-                {
-                    KillerPlayerState->ClientReportKill(DeadPlayerState);
-                    KillerPlayerState->KillScore++;
-                    KillerPlayerState->TeamKillScore++;
-                    KillerPlayerState->OnRep_Kills();
-                    UpdateSpecvars(DeadPC->NetConnection, KillerPlayerState);
-                }
-                else
-                {
-                    DeadPlayerState->ClientReportKill(DeadPlayerState);
-                    if (GameState->PlayersLeft > 0)
-                    {
-                        TArray<AFortPlayerPawn*> Pawns;
-                        GetFortKismet()->STATIC_GetAllFortPlayerPawns(GetWorld(), &Pawns);
-                        auto RandomPawn = (AFortPlayerPawnAthena*)Pawns[rand() % Pawns.Num()];
-                        UpdateSpecvars(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
-                    }
-                }
-
-                if (GameState->PlayersLeft == 1)
-                {
-                    TArray<AActor*> Pawns;
-                    static auto GameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass()->CreateDefaultObject();
-                    GameplayStatics->STATIC_GetAllActorsOfClass(GetWorld(), APlayerPawn_Athena_C::StaticClass(), &Pawns);
-                    auto WinnerPawn = (AFortPlayerPawnAthena*)Pawns[0];
-                    auto WinnerPC = (AFortPlayerControllerAthena*)WinnerPawn->Controller;
-                    auto WinnerState = (AFortPlayerStateAthena*)WinnerPC->PlayerState;
-                    if (!WinnerPC->IsClientNotifiedOfWin())
-                    {
-                        auto GameMode = (AFortGameModeAthena*)GameState->AuthorityGameMode;
-                        GameState->WinningPlayerName = WinnerState->PlayerName;
-                        GameState->OnRep_WinningPlayerName();
-                        GameMode->ReadyToEndMatch();
-                        GameMode->EndMatch();
-
-                        WinnerPC->ClientNotifyWon();
-                        WinnerPC->ClientNotifyTeamWon();
-                        WinnerPC->PlayWinEffects();
-                        WinnerPC->bClientNotifiedOfWin = true;
-                        WinnerPC->bClientNotifiedOfTeamWin = true;
-                        WinnerState->bHasWonAGame = true;
-                        WinnerPC->ClientGameEnded(WinnerPawn, true);
-                    }
-                }
-            }
-                else
-                {
-                    auto DeadPawnLoc = DeadPC->Pawn->K2_GetActorLocation();
-
-                    FDeathInfo deathInfo;
-                    deathInfo.bDBNO = false;
-                    deathInfo.DeathLocation = DeadPawnLoc;
-                    deathInfo.Distance = KillerPawn ? KillerPawn->GetDistanceTo(DeadPC->Pawn) : 0;
-                    deathInfo.DeathCause = KillerPlayerState ? EDeathCause::Sniper : EDeathCause::FallDamage;
-                    deathInfo.FinisherOrDowner = KillerPlayerState ? KillerPlayerState : DeadPlayerState;
-                    DeadPlayerState->DeathInfo = deathInfo;
-                    DeadPlayerState->OnRep_DeathInfo();
-
-                    if (KillerPlayerState && KillerPawn)
-                    {
-                        KillerPlayerState->ClientReportKill(DeadPlayerState);
-                        KillerPlayerState->KillScore++;
-                        KillerPlayerState->OnRep_Kills();
-                    }
-                    else
-                    {
-                        DeadPlayerState->ClientReportKill(DeadPlayerState);
-                    }
-
-                    auto CM = (UFortCheatManager*)DeadPC->CheatManager;
-                    CM->AllowRespawn();
-                    DeadPawnLoc.Z += 8200;
-                    DeadPC->Pawn->K2_DestroyActor();
-                    InitPawn(DeadPC, DeadPawnLoc);
-                    auto Pawn = (AFortPlayerPawnAthena*)DeadPC->Pawn;
-
-                    DeadPC->RespawnPlayerAfterDeath();
-                    CM->RespawnPlayer();
-                    CM->RespawnPlayerServer();
-
-                    constexpr static auto Health = (Mode == CustomMode::JUGGERNAUT) ? 500 : 100;
-                    const static auto Shield = 100;
-                    Pawn->SetMaxHealth(Health);
-                    Pawn->SetMaxShield(Shield);
-
-                    return 0;
-                }
-            //return 0;
-        }
-        */
-
         if (Function->GetFullName() == "Function BP_VictoryDrone.BP_VictoryDrone_C.OnSpawnOutAnimEnded")
         {
             if (!bPlayground)
@@ -595,7 +387,7 @@ namespace Hooks
                     {
                         auto DronePC = (AFortPlayerControllerAthena*)drone->Owner;
                         if (DronePC->NetConnection)
-                            Playground().OnDeath(DronePC, drone->K2_GetActorLocation());
+                            Playground().DroneAnimEnded(DronePC, drone->K2_GetActorLocation());
                     }
 
                     drone->K2_DestroyActor();
@@ -608,6 +400,7 @@ namespace Hooks
             auto Params = static_cast<AFortPlayerControllerZone_ClientOnPawnDied_Params*>(Parameters);
             auto DeadPC = (AFortPlayerControllerAthena*)Object;
             auto DeadPlayerState = (AFortPlayerStateAthena*)DeadPC->PlayerState;
+            bool IsKiller;
 
             if (DeadPC && Params)
             {
@@ -615,6 +408,7 @@ namespace Hooks
                 //static auto GameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass()->CreateDefaultObject();
                 //GameplayStatics->STATIC_GetAllActorsOfClass(GetWorld(), APlayerPawn_Athena_C::StaticClass(), &Pawns);
                 //auto GameState = (AAthena_GameState_C*)GetWorld()->AuthorityGameMode->GameState;
+                IsKiller = Params->DeathReport.KillerPlayerState ? true : false;
                 auto KillerPawn = Params->DeathReport.KillerPawn;
                 auto KillerPlayerState = (AFortPlayerStateAthena*)Params->DeathReport.KillerPlayerState;
 
@@ -629,29 +423,21 @@ namespace Hooks
                 Drone->Owner = DeadPC;
                 Drone->OnRep_Owner();
 
-                float DistanceActor = 0;
-                if (KillerPawn)
-                    DistanceActor = KillerPawn->GetDistanceTo(DeadPC->Pawn);
-
-                //DeadPC->Pawn->K2_DestroyActor();
                 if (!bPlayground)
                     GameState->PlayerArray.RemoveSingle(DeadPC->NetPlayerIndex);
 
                 FDeathInfo deathInfo;
                 deathInfo.bDBNO = false;
                 deathInfo.DeathLocation = DeadPawnLocation;
-                deathInfo.Distance = DistanceActor;
+                deathInfo.Distance = Params->DeathReport.KillerPawn ? Params->DeathReport.KillerPawn->GetDistanceTo(DeadPC->Pawn) : 0;
+                deathInfo.DeathCause = KillerPlayerState ? EDeathCause::Sniper : EDeathCause::FallDamage; // TODO: Determine what the actual death cause was.
+                deathInfo.FinisherOrDowner = KillerPlayerState ? KillerPlayerState : DeadPlayerState;
+                DeadPlayerState->DeathInfo = deathInfo;
+                DeadPlayerState->OnRep_DeathInfo();
 
-                if (DeadPC->Pawn)
-                    DeadPC->Pawn->K2_DestroyActor();
-
-                if (KillerPlayerState && KillerPawn)
+                if (IsKiller)
                 {
-                    deathInfo.DeathCause = EDeathCause::Sniper;
-                    deathInfo.FinisherOrDowner = KillerPlayerState;
                     KillerPlayerState->ClientReportKill(DeadPlayerState);
-                    DeadPlayerState->DeathInfo = deathInfo;
-                    DeadPlayerState->OnRep_DeathInfo();
                     KillerPlayerState->KillScore++;
                     KillerPlayerState->TeamKillScore++;
                     KillerPlayerState->OnRep_Kills();
@@ -663,21 +449,23 @@ namespace Hooks
                     deathInfo.DeathCause = EDeathCause::FallDamage;
                     deathInfo.FinisherOrDowner = DeadPlayerState;
                     DeadPlayerState->ClientReportKill(DeadPlayerState);
-                    DeadPlayerState->DeathInfo = deathInfo;
-                    DeadPlayerState->OnRep_DeathInfo();
-                    if (GameState->PlayersLeft > 0)
+                    if (GameState->PlayersLeft > 0 && !bPlayground)
                     {
-                        TArray<AActor*> Pawns;
-                        static auto GameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass()->CreateDefaultObject();
-                        GameplayStatics->STATIC_GetAllActorsOfClass(GetWorld(), APlayerPawn_Athena_C::StaticClass(), &Pawns);
+                        TArray<AFortPlayerPawn*> Pawns;
+                        GetFortKismet()->STATIC_GetAllFortPlayerPawns(GetWorld(), &Pawns);
                         auto RandomPawn = (AFortPlayerPawnAthena*)Pawns[rand() % Pawns.Num()];
-                        UpdateSpecvars(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
+                        if (RandomPawn)
+                            UpdateSpecvars(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
+                        Pawns.FreeArray();
                         //Spectate(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
                     }
                 }
 
                 if (DeadPC->Pawn)
                     DeadPC->Pawn->K2_DestroyActor();
+
+                if (bPlayground && IsKiller)
+                    Playground().OnDeath((AFortPlayerPawnAthena*)KillerPawn);
 
                 if (GameState->PlayersLeft == 1)
                 {
@@ -687,6 +475,7 @@ namespace Hooks
                         static auto GameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass()->CreateDefaultObject();
                         GameplayStatics->STATIC_GetAllActorsOfClass(GetWorld(), APlayerPawn_Athena_C::StaticClass(), &Pawns);
                         auto WinnerPawn = (AFortPlayerPawnAthena*)Pawns[0];
+                        Pawns.FreeArray();
                         auto WinnerPC = (AFortPlayerControllerAthena*)WinnerPawn->Controller;
                         auto WinnerState = (AFortPlayerStateAthena*)WinnerPC->PlayerState;
                         if (!WinnerPC->IsClientNotifiedOfWin())
