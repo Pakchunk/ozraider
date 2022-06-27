@@ -57,54 +57,8 @@ namespace Hooks
         return Index;
     }
 
-    static auto ChooseRandomPickaxe()
+    static auto ChooseRandomPickaxeIndex()
     {
-        static std::string PickaxePool[42] = {
-            "WID_Harvest_Pickaxe_Prismatic"
-            "WID_Harvest_Pickaxe_Anchor_Athena",
-            "WID_Harvest_Pickaxe_ArtDeco",
-            "WID_Harvest_Pickaxe_Assassin",
-            "WID_Harvest_Pickaxe_Assassin",
-            "WID_Harvest_Pickaxe_BoltOn_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Brite",
-            "WID_Harvest_Pickaxe_Carrot",
-            "WID_Harvest_Pickaxe_CircuitBreaker",
-            "WID_Harvest_Pickaxe_CuChulainn",
-            "WID_Harvest_Pickaxe_Deathvalley_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Disco_Athena",
-            "WID_Harvest_Pickaxe_District_Athena",
-            "WID_Harvest_Pickaxe_Dragon",
-            "WID_Harvest_Pickaxe_Flamingo_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Heart_Athena",
-            "WID_Harvest_Pickaxe_HolidayCandyCane_Athena",
-            "WID_Harvest_Pickaxe_HolidayGiftWrap_Athena",
-            "WID_Harvest_Pickaxe_IcePick_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Keg_Athena",
-            "WID_Harvest_Pickaxe_Lockjaw_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Medieval_Athena",
-            "WID_Harvest_Pickaxe_Megalodon_Athena",
-            "WID_Harvest_Pickaxe_PajamaParty",
-            "WID_Harvest_Pickaxe_Pizza",
-            "WID_Harvest_Pickaxe_Plunger",
-            "WID_Harvest_Pickaxe_PotOfGold",
-            "WID_Harvest_Pickaxe_Prismatic",
-            "WID_Harvest_Pickaxe_RockerPunk",
-            "WID_Harvest_Pickaxe_Scavenger",
-            "WID_Harvest_Pickaxe_Shark_Athena",
-            "WID_Harvest_Pickaxe_SickleBat_Athena_C_T01",
-            "WID_Harvest_Pickaxe_SkiBoot",
-            "WID_Harvest_Pickaxe_Smiley_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Space",
-            "WID_Harvest_Pickaxe_Spikey_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Squeak",
-            "WID_Harvest_Pickaxe_Stealth",
-            "WID_Harvest_Pickaxe_Tactical",
-            "WID_Harvest_Pickaxe_TacticalBlack",
-            "WID_Harvest_Pickaxe_TacticalUrban",
-            "WID_Harvest_Pickaxe_Teslacoil_Athena",
-            "WID_Harvest_Pickaxe_WinterCamo_Athena"
-        };
-
         static int Index = Index = rand() % 42;
         if (Index == 42)
             Index -= 2;
@@ -237,7 +191,7 @@ namespace Hooks
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
 
-        static int Index = ChooseRandomPickaxe();
+        static int Index = ChooseRandomPickaxeIndex();
         std::cout << Index << ": Pickaxe Index\n";
 
         static UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
