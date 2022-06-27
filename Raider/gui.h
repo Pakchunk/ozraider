@@ -21,6 +21,7 @@ bool bCosmetics = true;
 bool bLoadoutRegular = true;
 bool bLoadoutExplosives = false;
 bool bLoadoutSnipers = false;
+bool bLoadoutRandom = false;
 
 AAthena_GameState_C* GameState;
 AFortPlayerStateAthena* Seeker;
@@ -31,7 +32,8 @@ enum class WeaponLoadout
 {
     REGULAR,
     EXPLOSIVES,
-    SNIPERS
+    SNIPERS,
+    RANDOM
 };
 
 WeaponLoadout loadoutToUse = WeaponLoadout::REGULAR;
@@ -246,24 +248,35 @@ namespace GUI
                     ZeroGUI::Checkbox(L"Regular Loadout", &bLoadoutRegular);
                     ZeroGUI::Checkbox(L"Rockets Loadout", &bLoadoutExplosives);
                     ZeroGUI::Checkbox(L"Snipers Loadout", &bLoadoutSnipers);
+                    ZeroGUI::Checkbox(L"Random Loadout", &bLoadoutRandom);
 
                     if (bLoadoutRegular)
                     {
                         loadoutToUse = WeaponLoadout::REGULAR;
                         bLoadoutExplosives = false;
                         bLoadoutSnipers = false;
+                        bLoadoutRandom = false;
                     }
                     if (bLoadoutExplosives)
                     {
                         loadoutToUse = WeaponLoadout::EXPLOSIVES;
                         bLoadoutRegular = false;
                         bLoadoutSnipers = false;
+                        bLoadoutRandom = false;
                     }
                     if (bLoadoutSnipers)
                     {
                         loadoutToUse = WeaponLoadout::SNIPERS;
                         bLoadoutRegular = false;
                         bLoadoutExplosives = false;
+                        bLoadoutRandom = false;
+                    }
+                    if (bLoadoutRandom)
+                    {
+                        loadoutToUse = WeaponLoadout::RANDOM;
+                        bLoadoutRegular = false;
+                        bLoadoutExplosives = false;
+                        bLoadoutSnipers = false;
                     }
 
                 }

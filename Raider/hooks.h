@@ -66,6 +66,47 @@ namespace Hooks
         return Index;
     }
 
+    static auto ChooseRandomAssaultRifle()
+    {
+        static int Index2 = Index2 = rand() % 13;
+        if (Index2 == 13)
+            Index2 -= 2;
+
+        return Index2;
+    }
+    static auto ChooseRandomShotgun()
+    {
+        static int Index3 = Index3 = rand() % 11;
+        if (Index3 == 11)
+            Index3 -= 2;
+
+        return Index3;
+    }
+    static auto ChooseRandomSniper()
+    {
+        static int Index4 = Index4 = rand() % 21;
+        if (Index4 == 21)
+            Index4 -= 2;
+
+        return Index4;
+    }
+    static auto ChooseRandomFourthSlot()
+    {
+        static int Index5 = Index5 = rand() % 7;
+        if (Index5 == 7)
+            Index5 -= 2;
+
+        return Index5;
+    }
+    static auto ChooseRandomFifthSlot()
+    {
+        static int Index6 = Index6 = rand() % 6;
+        if (Index6 == 6)
+            Index6 -= 2;
+
+        return Index6;
+    }
+
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
     {
         auto PlayerController = (AFortPlayerControllerAthena*)Native::World::SpawnPlayActor(GetWorld(), NewPlayer, RemoteRole, URL, UniqueId, Error, NetPlayerIndex);
@@ -190,11 +231,103 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Teslacoil_Athena",
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
+        static std::string AssaultRiflePool[13] = {
+            "WID_Assault_Auto_Athena_C_Ore_T03"
+            "WID_Assault_Auto_Athena_UC_Ore_T03",
+            "WID_Assault_Auto_Athena_R_Ore_T03",
+            "WID_Assault_AutoHigh_Athena_VR_Ore_T03",
+            "WID_Assault_AutoHigh_Athena_SR_Ore_T03",
+            "WID_Assault_Hydraulic_Drum_Athena_SR_Ore_T03",
+            "WID_Assault_Ranged_Athena_R_Ore_T03",
+            "WID_Assault_Ranged_Athena_UC_Ore_T03",
+            "WID_Assault_Ranged_Athena_VR_Ore_T03",
+            "WID_Assault_SemiAuto_Athena_C_Ore_T02",
+            "WID_Assault_SemiAuto_Athena_R_Ore_T03",
+            "WID_Assault_SemiAuto_Athena_UC_Ore_T03",
+            "WID_Assault_SingleShot_Athena_SR_Ore_T03",
+            
+        };
+        static std::string ShotgunPool[11] = {
+            "WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
+            "WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
+            "WID_Shotgun_Minigun_Athena_SR_Ore_T03",
+            "WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
+            "WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
+            "WID_Shotgun_SemiAuto_Athena_VR_Ore_T03",
+            "WID_Shotgun_SlugFire_Athena_SR",
+            "WID_Shotgun_SlugFire_Athena_VR",
+            "WID_Shotgun_Standard_Athena_C_Ore_T03",
+            "WID_Shotgun_Standard_Athena_UC_Ore_T03",
+            "WID_Sniper_Shredder_Athena_SR_Ore_T03"
+        };
+        static std::string SniperPool[21] = {
+            "WID_Sniper_AMR_Athena_SR_Ore_T03",
+            "WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03",
+            "WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03",
+            "WID_Sniper_BoltAction_Scope_Athena_VR_Ore_T03",
+            "WID_Sniper_Crossbow_Athena_R_Ore_T03",
+            "WID_Sniper_Crossbow_Athena_VR_Ore_T03",
+            "WID_Sniper_NoScope_Athena_R_Ore_T03",
+            "WID_Sniper_NoScope_Athena_UC_Ore_T03",
+            "WID_Sniper_Standard_Scope_Athena_SR_Ore_T03",
+            "WID_Sniper_Standard_Scope_Athena_VR_Ore_T03",
+            "WID_Sniper_TripleShot_Athena_SR_Ore_T03",
+            "WID_DualPistol_SemiAuto_Athena_SR_Ore_T03",
+            "WID_DualPistol_SemiAuto_Athena_VR_Ore_T03",
+            "WID_Explosive_Crossbow_Athena_SR",
+            "WID_Assault_LMG_Athena_SR_Ore_T03",
+            "WID_Assault_LMG_Athena_VR_Ore_T03",
+            "WID_Assault_LMGSAW_Athena_R_Ore_T03",
+            "WID_Assault_LMGSAW_Athena_VR_Ore_T03",
+            "WID_Assault_AutoM4A1_Athena_VR_Ore_T04",
+            "WID_Assault_Surgical_Athena_R_Ore_T03",
+            "WID_Assault_Surgical_Athena_VR_Ore_T03"
+        };
+        static std::string FourthSlotPool[7] = {
+            "Athena_Bush",
+            "Athena_DanceGrenade",
+            "Athena_GasGrenade",
+            "Athena_Grenade",
+            "Athena_KnockGrenade",
+            "Athena_StickyGrenade",
+            "Athena_TowerGrenade"
+
+        };
+        static std::string FifthSlotPool[6] = {
+            "Athena_PurpleStuff",
+            "Athena_Medkit",
+            "Athena_Shields",
+            "Athena_ShieldSmall",
+            "Athena_Bandage",
+            "Athena_SuperMedkit"
+        };
 
         static int Index = ChooseRandomPickaxeIndex();
         std::cout << Index << ": Pickaxe Index\n";
 
+        static int Index2 = ChooseRandomAssaultRifle();
+        std::cout << Index2 << ": Assault Rifle Index\n";
+
+        static int Index3 = ChooseRandomShotgun();
+        std::cout << Index3 << ": Shotgun Index\n";
+
+        static int Index4 = ChooseRandomSniper();
+        std::cout << Index4 << ": Sniper Index\n";
+
+        static int Index5 = ChooseRandomFourthSlot();
+        std::cout << Index5 << ": Fourth Slot Index\n";
+
+        static int Index6 = ChooseRandomFifthSlot();
+        std::cout << Index6 << ": Fifth Slot Index\n";
+
+        
+
         static UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        static UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
+        static UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
+        static UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
+        static UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
+        static UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
 
         switch (loadoutToUse)
         {
@@ -237,6 +370,19 @@ namespace Hooks
                     FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03"),
                     FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03"),
                     FindWID("Athena_PurpleStuff")
+                };
+                EquipLoadout(PlayerController, FortLoadout);
+                break;
+            }
+            case WeaponLoadout::RANDOM:
+            {
+                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
+                    Pickaxe,
+                    RAssaultRifle,
+                    RShotgun,
+                    RSniper,
+                    RFourSlot,
+                    RFiveSlot,
                 };
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
