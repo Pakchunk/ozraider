@@ -186,7 +186,7 @@ namespace Hooks
             }
         }
 
-        static std::string PickaxePool[42] = {
+        std::string PickaxePool[42] = {
             "WID_Harvest_Pickaxe_Prismatic"
             "WID_Harvest_Pickaxe_Anchor_Athena",
             "WID_Harvest_Pickaxe_ArtDeco",
@@ -231,7 +231,7 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Teslacoil_Athena",
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
-        static std::string AssaultRiflePool[13] = {
+        std::string AssaultRiflePool[13] = {
             "WID_Assault_Auto_Athena_C_Ore_T03"
             "WID_Assault_Auto_Athena_UC_Ore_T03",
             "WID_Assault_Auto_Athena_R_Ore_T03",
@@ -247,7 +247,7 @@ namespace Hooks
             "WID_Assault_SingleShot_Athena_SR_Ore_T03",
             
         };
-        static std::string ShotgunPool[11] = {
+        std::string ShotgunPool[11] = {
             "WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
             "WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
             "WID_Shotgun_Minigun_Athena_SR_Ore_T03",
@@ -260,7 +260,7 @@ namespace Hooks
             "WID_Shotgun_Standard_Athena_UC_Ore_T03",
             "WID_Sniper_Shredder_Athena_SR_Ore_T03"
         };
-        static std::string SniperPool[21] = {
+        std::string SniperPool[21] = {
             "WID_Sniper_AMR_Athena_SR_Ore_T03",
             "WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03",
             "WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03",
@@ -283,7 +283,7 @@ namespace Hooks
             "WID_Assault_Surgical_Athena_R_Ore_T03",
             "WID_Assault_Surgical_Athena_VR_Ore_T03"
         };
-        static std::string FourthSlotPool[7] = {
+        std::string FourthSlotPool[7] = {
             "Athena_Bush",
             "Athena_DanceGrenade",
             "Athena_GasGrenade",
@@ -293,7 +293,7 @@ namespace Hooks
             "Athena_TowerGrenade"
 
         };
-        static std::string FifthSlotPool[6] = {
+        std::string FifthSlotPool[6] = {
             "Athena_PurpleStuff",
             "Athena_Medkit",
             "Athena_Shields",
@@ -302,22 +302,22 @@ namespace Hooks
             "Athena_SuperMedkit"
         };
 
-        static int Index = ChooseRandomPickaxeIndex();
+        int Index = ChooseRandomPickaxeIndex();
         std::cout << Index << ": Pickaxe Index\n";
 
-        static int Index2 = ChooseRandomAssaultRifle();
+        int Index2 = ChooseRandomAssaultRifle();
         std::cout << Index2 << ": Assault Rifle Index\n";
 
-        static int Index3 = ChooseRandomShotgun();
+        int Index3 = ChooseRandomShotgun();
         std::cout << Index3 << ": Shotgun Index\n";
 
-        static int Index4 = ChooseRandomSniper();
+        int Index4 = ChooseRandomSniper();
         std::cout << Index4 << ": Sniper Index\n";
 
-        static int Index5 = ChooseRandomFourthSlot();
+        int Index5 = ChooseRandomFourthSlot();
         std::cout << Index5 << ": Fourth Slot Index\n";
 
-        static int Index6 = ChooseRandomFifthSlot();
+        int Index6 = ChooseRandomFifthSlot();
         std::cout << Index6 << ": Fifth Slot Index\n";
 
         
@@ -376,7 +376,7 @@ namespace Hooks
             }
             case WeaponLoadout::RANDOM:
             {
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
+                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
                     Pickaxe,
                     RAssaultRifle,
                     RShotgun,
