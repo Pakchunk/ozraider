@@ -158,125 +158,20 @@ namespace UFunctionHooks
         DEFINE_PEHOOK("Function Engine.CheatManager.CheatScript", {
             return false;
         })
-        /*
+
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerCreateBuildingActor", {
             auto PC = (AFortPlayerControllerAthena*)Object;
-
             auto Params = (AFortPlayerController_ServerCreateBuildingActor_Params*)Parameters;
             auto CurrentBuildClass = Params->BuildingClassData.BuildingClass;
-            
+
             if (!bBuildingAllowed)
                 return false;
 
             static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
+
             auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
-            //std::cout << Params->BuildLoc.X << " " << Params->BuildLoc.Y << " " << Params->BuildLoc.Z << "\n";
-            //std::cout << Params->BuildRot.Pitch << " " << Params->BuildRot.Yaw << " " << Params->BuildRot.Roll << "\n";
-            //std::cout << CurrentBuildClass->GetFullName() << "\n";
 
-
-            if (!Pawn->PreviousBuild)//PreviousBuildingActor == nullptr)
-            {
-                printf("\nPlayer's Previous Build is NULLPTR, Creating new instance!\n");
-                if (PC && Params && CurrentBuildClass)
-                {
-                    {
-                        auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
-                        // SpawnBuilding(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, (APlayerPawn_Athena_C*)PC->Pawn);
-                        if (BuildingActor && CanBuild2(BuildingActor))
-                        {
-                            //Buildings.insert(BuildingActor); // Add as soon as possible to make sure there is no time to double build.
-
-                            BuildingActor->DynamicBuildingPlacementType = EDynamicBuildingPlacementType::DestroyAnythingThatCollides;
-                            BuildingActor->SetMirrored(Params->bMirrored);
-                            // BuildingActor->PlacedByPlacementTool();
-                            BuildingActor->InitializeKismetSpawnedBuildingActor(BuildingActor, PC);
-                            auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
-                            BuildingActor->Team = PlayerState->TeamIndex;
-                        }
-                        else
-                        {
-                            BuildingActor->SetActorScale3D({});
-                            BuildingActor->SilentDie();
-                        }
-                        Pawn->PreviousBuild = BuildingActor; //PreviousBuildingActor = BuildingActor;
-                        //std::cout << "1: " << PreviousBuildingActor->GetFullName() << "\n";
-                        //std::cout << "2: " << PreviousBuildingActor->Class->GetFullName() << "\n";
-                    }
-                }
-                return false;
-            }
-            
-            if (CurrentBuildClass->GetFullName() != Pawn->PreviousBuild->Class->GetFullName())//PreviousBuildingActor->Class->GetFullName())
-            {
-                if (PC && Params && CurrentBuildClass)
-                {
-                    auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
-                    // SpawnBuilding(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, (APlayerPawn_Athena_C*)PC->Pawn);
-                    if (BuildingActor && CanBuild2(BuildingActor))
-                    {
-                        //Buildings.insert(BuildingActor); // Add as soon as possible to make sure there is no time to double build.
-                    
-                        BuildingActor->DynamicBuildingPlacementType = EDynamicBuildingPlacementType::DestroyAnythingThatCollides;
-                        BuildingActor->SetMirrored(Params->bMirrored);
-                        // BuildingActor->PlacedByPlacementTool();
-                        BuildingActor->InitializeKismetSpawnedBuildingActor(BuildingActor, PC);
-                        auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
-                        BuildingActor->Team = PlayerState->TeamIndex;
-                    }
-                    else
-                    {
-                        BuildingActor->SetActorScale3D({});
-                        BuildingActor->SilentDie();
-                    }
-                    Pawn->PreviousBuild = BuildingActor;  //PreviousBuildingActor = BuildingActor;
-                }
-            }
-            else
-            {
-                if (Params->BuildLoc.X != Pawn->PreviousBuild->K2_GetActorLocation().X || Params->BuildLoc.Y != Pawn->PreviousBuild->K2_GetActorLocation().Y || Params->BuildLoc.Z != Pawn->PreviousBuild->K2_GetActorLocation().Z) //(Params->BuildLoc.X != PreviousBuildingActor->K2_GetActorLocation().X || Params->BuildLoc.Y != PreviousBuildingActor->K2_GetActorLocation().Y || Params->BuildLoc.Z != PreviousBuildingActor->K2_GetActorLocation().Z)
-                {
-                    if (PC && Params && CurrentBuildClass)
-                    {
-                        auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
-                        // SpawnBuilding(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, (APlayerPawn_Athena_C*)PC->Pawn);
-                        if (BuildingActor && CanBuild2(BuildingActor))
-                        {
-                            //Buildings.insert(BuildingActor); // Add as soon as possible to make sure there is no time to double build.
-
-                            BuildingActor->DynamicBuildingPlacementType = EDynamicBuildingPlacementType::DestroyAnythingThatCollides;
-                            BuildingActor->SetMirrored(Params->bMirrored);
-                            // BuildingActor->PlacedByPlacementTool();
-                            BuildingActor->InitializeKismetSpawnedBuildingActor(BuildingActor, PC);
-                            auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
-                            BuildingActor->Team = PlayerState->TeamIndex;
-                        }
-                        else
-                        {
-                            BuildingActor->SetActorScale3D({});
-                            BuildingActor->SilentDie();
-                        }
-                        Pawn->PreviousBuild = BuildingActor; //PreviousBuildingActor = BuildingActor;
-                    }
-                }
-            }
-
-            return false;
-        })
-        */
-
-        DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerCreateBuildingActor", {
-            auto PC = (AFortPlayerControllerAthena*)Object;
-            auto Params = (AFortPlayerController_ServerCreateBuildingActor_Params*)Parameters;
-            auto CurrentBuildClass = Params->BuildingClassData.BuildingClass;
-
-            if (!bBuildingAllowed)
-                return false;
-
-            static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
-            auto State = (AFortPlayerStateAthena*)PC->PlayerState;
-
-            if (!State->PreviousBuild)
+            if (!Pawn->PreviousBuild)
             {
                 std::cout << "LogRaider: Player's previous build is invalid! Creating new instance.\n";
                 if (PC && Params && CurrentBuildClass)
@@ -284,31 +179,31 @@ namespace UFunctionHooks
                     {
                         auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
                         Build(PC, BuildingActor, Params);
-                        State->PreviousBuild = BuildingActor;
+                        Pawn->PreviousBuild = BuildingActor;
                     }
                 }
                 return false;
             }
 
-            if (CurrentBuildClass->GetFullName() != State->PreviousBuild->Class->GetFullName())
+            if (CurrentBuildClass->GetFullName() != Pawn->PreviousBuild->Class->GetFullName())
             {
                 if (PC && Params && CurrentBuildClass)
                 {
                     auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
                     Build(PC, BuildingActor, Params);
-                    State->PreviousBuild = BuildingActor;
+                    Pawn->PreviousBuild = BuildingActor;
                 }
             }
             else
             {
-                auto PreviousBuildLoc = State->PreviousBuild->K2_GetActorLocation();
+                auto PreviousBuildLoc = Pawn->PreviousBuild->K2_GetActorLocation();
                 if (Params->BuildLoc.X != PreviousBuildLoc.X || Params->BuildLoc.Y != PreviousBuildLoc.Y || Params->BuildLoc.Z != PreviousBuildLoc.Z)
                 {
                     if (PC && Params && CurrentBuildClass)
                     {
                         auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
                         Build(PC, BuildingActor, Params);
-                        State->PreviousBuild = BuildingActor;
+                        Pawn->PreviousBuild = BuildingActor;
                     }
                 }
             }
@@ -702,11 +597,6 @@ namespace UFunctionHooks
                 return true;
             }
 
-            if (Pawn && Pawn->AbilitySystemComponent)
-            {
-                ApplyAbilities(Pawn);
-            }
-
             auto PC = (AFortPlayerControllerAthena*)Object;
             PC->ActivateSlot(EFortQuickBars::Primary, 0, 0, true); // Select the pickaxe
 
@@ -715,9 +605,6 @@ namespace UFunctionHooks
 
             if (bFound)
                 EquipInventoryItem(PC, PickaxeEntry.ItemGuid);
-
-            auto Drone = (ABP_VictoryDrone_C*)SpawnActor(ABP_VictoryDrone_C::StaticClass(), Pawn->K2_GetActorLocation());
-            Drone->TriggerPlayerSpawnEffects();
 
             return false;
         })

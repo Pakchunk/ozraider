@@ -1055,6 +1055,8 @@ static void InitPawn(AFortPlayerControllerAthena* PlayerController, FVector Loc 
     Pawn->SetMaxHealth(100);
     Pawn->SetMaxShield(100);
     
+    Pawn->HealthRegenGameplayEffect = nullptr;
+    Pawn->HealthRegenDelayGameplayEffect = nullptr;
 
     Pawn->bReplicateMovement = true;
     Pawn->OnRep_ReplicateMovement();
