@@ -303,7 +303,7 @@ bool CanBuild(ABuildingSMActor* BuildingActor)
 
         if (Building->K2_GetActorLocation() == BuildingActor->K2_GetActorLocation()) // If we use a vector of locations, I do not know how to track if the actor has been destroyed. // Maybe we could use a map so we dont get the location everytime
         {
-            // if (!BuildingClass->IsA(APBWA_W1_StairW_C::StaticClass()) || (BuildingClass->IsA(APBWA_W1_StairW_C::StaticClass()) && Building->BuildingType == EFortBuildingType::Stairs))
+             //if (!BuildingClass->IsA(APBWA_W1_StairW_C::StaticClass()) || (BuildingClass->IsA(APBWA_W1_StairW_C::StaticClass()) && Building->BuildingType == EFortBuildingType::Stairs))
             {
                 return false;
             }
@@ -313,17 +313,38 @@ bool CanBuild(ABuildingSMActor* BuildingActor)
     return true;
 }
 
-bool CanBuild2(ABuildingSMActor* BuildingActor)
+bool CanBuild2(ABuildingSMActor* BuildingActor, AFortPlayerController_ServerCreateBuildingActor_Params* Params)
 {
     static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
 
     TArray<ABuildingActor*> ExistingBuildings;
-    EFortStructuralGridQueryResults bCanBuild = GameState->StructuralSupportSystem->K2_CanAddBuildingActorToGrid(GetWorld(), BuildingActor, BuildingActor->K2_GetActorLocation(), BuildingActor->K2_GetActorRotation(), false, false, &ExistingBuildings);
+    EFortStructuralGridQueryResults bCanBuild = GameState->StructuralSupportSystem->K2_CanAddBuildingActorToGrid(GetWorld(), BuildingActor, BuildingActor->K2_GetActorLocation(), BuildingActor->K2_GetActorRotation(), Params->bMirrored, true, &ExistingBuildings);
 
-	if (bCanBuild == EFortStructuralGridQueryResults::CanAdd || ExistingBuildings.Num() == 0)
+	if (bCanBuild == EFortStructuralGridQueryResults::CanAdd && bCanBuild != EFortStructuralGridQueryResults::ExistingActor || ExistingBuildings.Num() == 0)
         return true;
-	
+
+    // this check allows u to build anywhere but sadly it does slow down building a bit :/
+    if (bCanBuild == EFortStructuralGridQueryResults::ExistingActor || ExistingBuildings.Num() == 0)
+        return true;
+
     return false;
+}
+
+inline void Build(AFortPlayerControllerAthena* PC, ABuildingSMActor* BuildingActor, AFortPlayerController_ServerCreateBuildingActor_Params* Params)
+{
+    if (BuildingActor && CanBuild2(BuildingActor, Params))
+    {
+        BuildingActor->DynamicBuildingPlacementType = EDynamicBuildingPlacementType::DestroyAnythingThatCollides;
+        BuildingActor->SetMirrored(Params->bMirrored);
+        BuildingActor->InitializeKismetSpawnedBuildingActor(BuildingActor, PC);
+        auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
+        BuildingActor->Team = PlayerState->TeamIndex;
+    }
+    else
+    {
+        BuildingActor->SetActorScale3D({});
+        BuildingActor->SilentDie();
+    }
 }
 
 inline FFortItemEntry GetEntryInSlot(AFortPlayerControllerAthena* Controller, int Slot, int Item = 0, EFortQuickBars QuickBars = EFortQuickBars::Primary)
@@ -617,7 +638,7 @@ inline void EquipInventoryItem(AFortPlayerControllerAthena* PC, FGuid& Guid)
 
         if (CurrentItemInstance->GetItemGuid() == Guid && Def)
         {
-            EquipWeaponDefinition((APlayerPawn_Athena_C*)PC->Pawn, Def, Guid); // CurrentItemInstance->ItemEntry.LoadedAmmo);
+            EquipWeaponDefinition((APlayerPawn_Athena_C*)PC->Pawn, Def, Guid, -1, true); // CurrentItemInstance->ItemEntry.LoadedAmmo);
             break;
         }
     }

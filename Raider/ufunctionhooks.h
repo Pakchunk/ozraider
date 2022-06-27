@@ -19,6 +19,7 @@ namespace UFunctionHooks
     inline std::vector<std::function<bool(UObject*, void*)>> toCall;
     inline ABuildingSMActor* PreviousBuildingActor;
     inline bool thhis = false;
+    int iii = 0;
 
     #define DEFINE_PEHOOK(ufunctionName, func)                           \
         toHook.push_back(UObject::FindObject<UFunction>(ufunctionName)); \
@@ -157,7 +158,7 @@ namespace UFunctionHooks
         DEFINE_PEHOOK("Function Engine.CheatManager.CheatScript", {
             return false;
         })
-
+        /*
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerCreateBuildingActor", {
             auto PC = (AFortPlayerControllerAthena*)Object;
 
@@ -168,14 +169,15 @@ namespace UFunctionHooks
                 return false;
 
             static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
+            auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
             //std::cout << Params->BuildLoc.X << " " << Params->BuildLoc.Y << " " << Params->BuildLoc.Z << "\n";
             //std::cout << Params->BuildRot.Pitch << " " << Params->BuildRot.Yaw << " " << Params->BuildRot.Roll << "\n";
             //std::cout << CurrentBuildClass->GetFullName() << "\n";
 
 
-            if (PreviousBuildingActor == nullptr)
+            if (!Pawn->PreviousBuild)//PreviousBuildingActor == nullptr)
             {
-                printf("\nPrevious Build is NULLPTR, Creating new instance!\n");
+                printf("\nPlayer's Previous Build is NULLPTR, Creating new instance!\n");
                 if (PC && Params && CurrentBuildClass)
                 {
                     {
@@ -197,7 +199,7 @@ namespace UFunctionHooks
                             BuildingActor->SetActorScale3D({});
                             BuildingActor->SilentDie();
                         }
-                        PreviousBuildingActor = BuildingActor;
+                        Pawn->PreviousBuild = BuildingActor; //PreviousBuildingActor = BuildingActor;
                         //std::cout << "1: " << PreviousBuildingActor->GetFullName() << "\n";
                         //std::cout << "2: " << PreviousBuildingActor->Class->GetFullName() << "\n";
                     }
@@ -205,7 +207,7 @@ namespace UFunctionHooks
                 return false;
             }
             
-            if (CurrentBuildClass->GetFullName() != PreviousBuildingActor->Class->GetFullName())
+            if (CurrentBuildClass->GetFullName() != Pawn->PreviousBuild->Class->GetFullName())//PreviousBuildingActor->Class->GetFullName())
             {
                 if (PC && Params && CurrentBuildClass)
                 {
@@ -227,12 +229,12 @@ namespace UFunctionHooks
                         BuildingActor->SetActorScale3D({});
                         BuildingActor->SilentDie();
                     }
-                    PreviousBuildingActor = BuildingActor;
+                    Pawn->PreviousBuild = BuildingActor;  //PreviousBuildingActor = BuildingActor;
                 }
             }
             else
             {
-                if (Params->BuildLoc.X != PreviousBuildingActor->K2_GetActorLocation().X || Params->BuildLoc.Y != PreviousBuildingActor->K2_GetActorLocation().Y || Params->BuildLoc.Z != PreviousBuildingActor->K2_GetActorLocation().Z)
+                if (Params->BuildLoc.X != Pawn->PreviousBuild->K2_GetActorLocation().X || Params->BuildLoc.Y != Pawn->PreviousBuild->K2_GetActorLocation().Y || Params->BuildLoc.Z != Pawn->PreviousBuild->K2_GetActorLocation().Z) //(Params->BuildLoc.X != PreviousBuildingActor->K2_GetActorLocation().X || Params->BuildLoc.Y != PreviousBuildingActor->K2_GetActorLocation().Y || Params->BuildLoc.Z != PreviousBuildingActor->K2_GetActorLocation().Z)
                 {
                     if (PC && Params && CurrentBuildClass)
                     {
@@ -254,7 +256,59 @@ namespace UFunctionHooks
                             BuildingActor->SetActorScale3D({});
                             BuildingActor->SilentDie();
                         }
-                        PreviousBuildingActor = BuildingActor;
+                        Pawn->PreviousBuild = BuildingActor; //PreviousBuildingActor = BuildingActor;
+                    }
+                }
+            }
+
+            return false;
+        })
+        */
+
+        DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerCreateBuildingActor", {
+            auto PC = (AFortPlayerControllerAthena*)Object;
+            auto Params = (AFortPlayerController_ServerCreateBuildingActor_Params*)Parameters;
+            auto CurrentBuildClass = Params->BuildingClassData.BuildingClass;
+
+            if (!bBuildingAllowed)
+                return false;
+
+            static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
+            auto State = (AFortPlayerStateAthena*)PC->PlayerState;
+
+            if (!State->PreviousBuild)
+            {
+                std::cout << "LogRaider: Player's previous build is invalid! Creating new instance.\n";
+                if (PC && Params && CurrentBuildClass)
+                {
+                    {
+                        auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+                        Build(PC, BuildingActor, Params);
+                        State->PreviousBuild = BuildingActor;
+                    }
+                }
+                return false;
+            }
+
+            if (CurrentBuildClass->GetFullName() != State->PreviousBuild->Class->GetFullName())
+            {
+                if (PC && Params && CurrentBuildClass)
+                {
+                    auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+                    Build(PC, BuildingActor, Params);
+                    State->PreviousBuild = BuildingActor;
+                }
+            }
+            else
+            {
+                auto PreviousBuildLoc = State->PreviousBuild->K2_GetActorLocation();
+                if (Params->BuildLoc.X != PreviousBuildLoc.X || Params->BuildLoc.Y != PreviousBuildLoc.Y || Params->BuildLoc.Z != PreviousBuildLoc.Z)
+                {
+                    if (PC && Params && CurrentBuildClass)
+                    {
+                        auto BuildingActor = (ABuildingSMActor*)SpawnActor(CurrentBuildClass, Params->BuildLoc, Params->BuildRot, PC, ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+                        Build(PC, BuildingActor, Params);
+                        State->PreviousBuild = BuildingActor;
                     }
                 }
             }
@@ -435,7 +489,7 @@ namespace UFunctionHooks
 
             return false;
         })
-        /*
+
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerRepairBuildingActor", {
             auto Params = (AFortPlayerController_ServerRepairBuildingActor_Params*)Parameters;
             auto Controller = (AFortPlayerControllerAthena*)Object;
@@ -448,7 +502,7 @@ namespace UFunctionHooks
 
             return false;
         })
-        */
+
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerControllerAthena.ServerAttemptAircraftJump", {
             auto Params = (AFortPlayerControllerAthena_ServerAttemptAircraftJump_Params*)Parameters;
             auto PC = (AFortPlayerControllerAthena*)Object;
@@ -647,7 +701,7 @@ namespace UFunctionHooks
                 // Should we change their name to "Banned" or something?
                 return true;
             }
-	
+
             if (Pawn && Pawn->AbilitySystemComponent)
             {
                 ApplyAbilities(Pawn);
@@ -668,22 +722,34 @@ namespace UFunctionHooks
             return false;
         })
 
-        DEFINE_PEHOOK("Function FortniteGame.FortPlayerPawn.ServerChoosePart", {
-            auto Params = (AFortPlayerPawn_ServerChoosePart_Params*)Parameters;
-            auto Pawn = (APlayerPawn_Athena_C*)Object;
-
-            if (Params && Pawn)
+        DEFINE_PEHOOK("Function FortniteGame.FortPlayerPawn.ServerChoosePart", 
+        {
+            if (bCosmetics)
             {
-                if (!Params->ChosenCharacterPart)
-                    return true;
+                auto Params = (AFortPlayerPawn_ServerChoosePart_Params*)Parameters;
+                auto Pawn = (APlayerPawn_Athena_C*)Object;
+            
+                if (Params && Pawn)
+                {
+                    if (!Params->ChosenCharacterPart)
+                        return true;
+                }
+            
+                return false;
             }
 
-            return false;
+            return true;
         })
 
         DEFINE_PEHOOK("Function Engine.GameMode.ReadyToStartMatch", {
+
+
             if (!bListening)
             {
+                if (!bReadyToStart)
+                {
+                    return true;
+                }
                 Game::OnReadyToStartMatch();
 
                 HostBeacon = SpawnActor<AFortOnlineBeaconHost>();

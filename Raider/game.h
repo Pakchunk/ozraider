@@ -38,18 +38,12 @@ namespace Game
         if (Playlist)
         {
             Playlist->bNoDBNO = true;
-            //Playlist->bIsLargeTeamGame = true;
-
-            Playlist->FriendlyFireType = EFriendlyFireType::Off;
-            //Playlist->RespawnType = EAthenaRespawnType::InfiniteRespawn;
-            //Playlist->RespawnLocation = EAthenaRespawnLocation::Air;
-
+            Playlist->FriendlyFireType = EFriendlyFireType::On;
             GameState->CurrentPlaylistData = Playlist;
             GameState->OnRep_CurrentPlaylistData();
         }
 
         GameMode->FriendlyFireType = EFriendlyFireType::Off;
-        //GameMode->MinRespawnDelay = 3;
 
         GameMode->StartPlay();
 
