@@ -57,7 +57,7 @@ namespace Hooks
         return Index;
     }
 
-    static auto ChooseRandomPickaxeIndex()
+    auto ChooseRandomPickaxeIndex()
     {
         static int Index = Index = rand() % 42;
         if (Index == 42)
@@ -66,7 +66,7 @@ namespace Hooks
         return Index;
     }
 
-    static auto ChooseRandomAssaultRifle()
+    auto ChooseRandomAssaultRifle()
     {
         static int Index2 = Index2 = rand() % 13;
         if (Index2 == 13)
@@ -74,7 +74,7 @@ namespace Hooks
 
         return Index2;
     }
-    static auto ChooseRandomShotgun()
+    auto ChooseRandomShotgun()
     {
         static int Index3 = Index3 = rand() % 11;
         if (Index3 == 11)
@@ -82,7 +82,7 @@ namespace Hooks
 
         return Index3;
     }
-    static auto ChooseRandomSniper()
+    auto ChooseRandomSniper()
     {
         static int Index4 = Index4 = rand() % 21;
         if (Index4 == 21)
@@ -90,7 +90,7 @@ namespace Hooks
 
         return Index4;
     }
-    static auto ChooseRandomFourthSlot()
+    auto ChooseRandomFourthSlot()
     {
         static int Index5 = Index5 = rand() % 7;
         if (Index5 == 7)
@@ -98,7 +98,7 @@ namespace Hooks
 
         return Index5;
     }
-    static auto ChooseRandomFifthSlot()
+    auto ChooseRandomFifthSlot()
     {
         static int Index6 = Index6 = rand() % 6;
         if (Index6 == 6)
