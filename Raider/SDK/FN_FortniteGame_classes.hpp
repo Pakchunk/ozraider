@@ -24527,6 +24527,15 @@ public:
 class AFortPlayerPawnAthena : public AFortPlayerPawn
 {
 public:
+    /*
+	* User Made Variables
+	*/
+
+    ABuildingSMActor*								   PreviousBuild;
+
+    /*
+	* User Made Variables End
+	*/
 	unsigned char                                      UnknownData00[0x8];                                       // 0x1A50(0x0008) MISSED OFFSET
 	float                                              CurrentPawnSpeedXY;                                       // 0x1A58(0x0004) (BlueprintVisible, BlueprintReadOnly, ZeroConstructor, IsPlainOldData)
 	struct FRotator                                    CurrentPawnVelXYRot;                                      // 0x1A5C(0x000C) (BlueprintVisible, BlueprintReadOnly, IsPlainOldData)
@@ -24866,15 +24875,6 @@ public:
 class AFortPlayerStateAthena : public AFortPlayerStatePvP
 {
 public:
-    /*
-	* User Made Variables
-	*/
-
-    ABuildingSMActor*								   PreviousBuild;
-
-    /*
-	* User Made Variables End
-	*/
 	float                                              TeamMemberStateRepTime;                                   // 0x0EC0(0x0004) (ZeroConstructor, IsPlainOldData)
 	unsigned char                                      UnknownData00[0x7C];                                      // 0x0EC4(0x007C) MISSED OFFSET
 	struct FDeathInfo                                  DeathInfo;                                                // 0x0F40(0x0020) (Net)
