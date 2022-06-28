@@ -3,6 +3,7 @@
 #include "gui.h"
 #include "ue4.h"
 #include "game.h"
+#include "framework.h"
 
 class Playground
 {
@@ -10,8 +11,16 @@ public:
     void InitializePlayground(UFortPlaylistAthena* CurrentPlaylist, AAthena_GameState_C* GameState)
     {
         auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
-        GameMode->bSafeZoneActive = false;
-        GameMode->bSafeZonePaused = true;
+        auto Aircraft = GameState->GetAircraft(0);
+        if (Aircraft)
+        {
+            GameState->SafeZonePhase = 5;
+            //GameState->SafeZonesStartTime = 2;
+            //GameMode->SafeZonePhase = 5;
+            
+        }
+        
+        
 
         auto Playlist = CurrentPlaylist;
 
@@ -47,8 +56,8 @@ public:
     {
         if (KillerPawn && !KillerPawn->IsDead())
         {
-            int HealthToGive = 50;
-            if (KillerPawn->GetHealth() > 50)
+            int HealthToGive = 100;
+            if (KillerPawn->GetHealth() > 100)
             {
                 HealthToGive = KillerPawn->GetMaxHealth() - KillerPawn->GetHealth();
             }

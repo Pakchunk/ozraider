@@ -7,6 +7,8 @@
 
 namespace Hooks
 {
+
+    
     bool LocalPlayerSpawnPlayActor(ULocalPlayer* Player, const FString& URL, FString& OutError, UWorld* World) // prevent server's pc from spawning
     {
         if (bTraveled)
@@ -56,11 +58,14 @@ namespace Hooks
         static int Index = GetMath()->STATIC_RandomIntegerInRange(0, 42);
         return Index;
     }
+    
+
+    
 
     auto ChooseRandomPickaxeIndex()
     {
         static int Index = Index = rand() % 43;
-        if (Index == 43)
+        if (Index == 42)
             Index -= 2;
 
         return Index;
@@ -69,7 +74,7 @@ namespace Hooks
         auto ChooseRandomAssaultRifle()
         {
             int Index2 = Index2 = rand() % 18; //one more than actual number.
-            if (Index2 == 18)
+            if (Index2 == 17)
                 Index2 -= 2;
 
             return Index2;
@@ -77,7 +82,7 @@ namespace Hooks
         auto ChooseRandomShotgun()
         {
             int Index3 = Index3 = rand() % 8;
-            if (Index3 == 8)
+            if (Index3 == 7)
                 Index3 -= 2;
 
             return Index3;
@@ -85,7 +90,7 @@ namespace Hooks
         auto ChooseRandomSniper()
         {
             int Index4 = Index4 = rand() % 24;
-            if (Index4 == 24)
+            if (Index4 == 23)
                 Index4 -= 2;
 
             return Index4;
@@ -93,7 +98,7 @@ namespace Hooks
         auto ChooseRandomFourthSlot()
         {
             int Index5 = Index5 = rand() % 5;
-            if (Index5 == 5)
+            if (Index5 == 4)
                 Index5 -= 2;
 
             return Index5;
@@ -101,7 +106,7 @@ namespace Hooks
         auto ChooseRandomFifthSlot()
         {
             int Index6 = Index6 = rand() % 7;
-            if (Index6 == 7)
+            if (Index6 == 6)
                 Index6 -= 2;
 
             return Index6;
@@ -186,6 +191,8 @@ namespace Hooks
                 }
             }
         }
+        
+
         
         std::string PickaxePool[42] = {
             "WID_Harvest_Pickaxe_Prismatic",
@@ -304,6 +311,8 @@ namespace Hooks
             "Athena_SuperMedkit"
         };
 
+
+
         int Index = ChooseRandomPickaxeIndex();
         std::cout << Index << ": Pickaxe Index\n";
 
@@ -321,6 +330,9 @@ namespace Hooks
 
         int Index6 = ChooseRandomFifthSlot();
         std::cout << Index6 << ": Fifth Slot Index\n";
+
+        
+
         
 
         
@@ -562,6 +574,37 @@ namespace Hooks
                 }
             }
         }
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerAttemptInteract")
+        {
+            auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
+            auto PC = (AFortPlayerControllerAthena*)Object;
+
+            if (Params->ReceivingActor)
+            {
+                if (Params->ReceivingActor->IsA(APlayerPawn_Athena_C::StaticClass()))
+                {
+                    auto DBNOPawn = (APlayerPawn_Athena_C*)Params->ReceivingActor;
+                    auto DBNOPC = (AFortPlayerControllerAthena*)DBNOPawn->Controller;
+
+                    if (DBNOPawn && DBNOPC)
+                    {
+                        DBNOPawn->ReviveFromDBNO(PC);
+                    }
+                }
+
+                if (Params->ReceivingActor->IsA(ABuildingContainer::StaticClass()))
+                {
+                    auto Container = (ABuildingContainer*)Params->ReceivingActor;
+
+                    Container->bAlreadySearched = true;
+                    Container->OnRep_bAlreadySearched();
+
+                    
+                }
+            }
+        }
+                          
+                      
         
         if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied")
         {
@@ -598,7 +641,7 @@ namespace Hooks
                 deathInfo.bDBNO = false;
                 deathInfo.DeathLocation = DeadPawnLocation;
                 deathInfo.Distance = Params->DeathReport.KillerPawn ? Params->DeathReport.KillerPawn->GetDistanceTo(DeadPC->Pawn) : 0;
-                deathInfo.DeathCause = KillerPlayerState ? EDeathCause::Sniper : EDeathCause::FallDamage; // TODO: Determine what the actual death cause was.
+                deathInfo.DeathCause = KillerPlayerState ? EDeathCause::Banhammer : EDeathCause::FallDamage; // TODO: Determine what the actual death cause was.
                 deathInfo.FinisherOrDowner = KillerPlayerState ? KillerPlayerState : DeadPlayerState;
                 DeadPlayerState->DeathInfo = deathInfo;
                 DeadPlayerState->OnRep_DeathInfo();

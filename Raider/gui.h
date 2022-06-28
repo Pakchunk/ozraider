@@ -22,6 +22,7 @@ bool bLoadoutRegular = true;
 bool bLoadoutExplosives = false;
 bool bLoadoutSnipers = false;
 bool bLoadoutRandom = false;
+bool bAllowStorm = true;
 
 AAthena_GameState_C* GameState;
 AFortPlayerStateAthena* Seeker;
@@ -42,7 +43,7 @@ namespace GUI
 {
     auto getRandomLocation()
     {
-        FVector LocationPool[22] = 
+        FVector LocationPool[25] = 
         {
             { 24426, 37710, 17525 }, // retail row
             { 50018, 73844, 17525 }, // lonely lodge
@@ -62,15 +63,19 @@ namespace GUI
             { 39781, 61621, 17525 }, // Moisty Mire
             { -68000, -63521, 17525 }, // Flush Factory
             { 3502, -9183, 10500 }, // Salty Springs
-            { 7760, 76702, 17525 }, //race track
-            { 38374, -94726, 17525 }, //Soccer field
+            { 7760, 76702, 10525 }, //race track
+            { 38374, -94726, 10525 }, //Soccer field
             { 70000, -40121, 17525 }, // Loot Lake
+            { -26479, 41847, 5700 }, //Prison
+            { 56771, 32818, 6525 }, //Containers/crates
+            { -75353, -8694, 4354 },
             { -123778, -112480, 17525 } //Spawn Island
         };
 
-        return LocationPool[rand() % 23];
+        return LocationPool[rand() % 26];
     }
 
+    
     std::mutex mtx;
     void Tick()
     {
@@ -176,6 +181,20 @@ namespace GUI
                                     if (bPlayground)
                                     {
                                         Playground().InitializePlayground(SoloPlaylist, GameState);
+                                        auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
+                                        if (bAllowStorm)
+                                        {
+                                            GameMode->bSafeZoneActive = true;
+                                            GameMode->bSafeZonePaused = false;
+                                            
+                                            
+                                        }
+
+                                        if (!bAllowStorm)
+                                        {
+                                            GameMode->bSafeZoneActive = false;
+                                            GameMode->bSafeZonePaused = true;
+                                        }
                                     }
                                 }
 
@@ -185,6 +204,8 @@ namespace GUI
                             }
 
                             ZeroGUI::Checkbox(L"Spawn bus on a random location?", &bBusOnLocations);
+
+                            ZeroGUI::Checkbox(L"Allow Storm?", &bAllowStorm);
 
                             if (!bPlayground)
                             {
