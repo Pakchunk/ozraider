@@ -72,6 +72,7 @@ namespace Hooks
             if (Index2 == 17)
                 Index2 -= 2;
 
+<<<<<<< HEAD
             return Index2;
         }
         auto ChooseRandomShotgun()
@@ -107,6 +108,48 @@ namespace Hooks
             return Index6;
         }
     
+=======
+    auto ChooseRandomAssaultRifle()
+    {
+        int Index2 = Index2 = rand() % 13;
+        if (Index2 == 13)
+            Index2 -= 2;
+
+        return Index2;
+    }
+    auto ChooseRandomShotgun()
+    {
+        int Index3 = Index3 = rand() % 11;
+        if (Index3 == 11)
+            Index3 -= 2;
+
+        return Index3;
+    }
+    auto ChooseRandomSniper()
+    {
+        int Index4 = Index4 = rand() % 21;
+        if (Index4 == 21)
+            Index4 -= 2;
+
+        return Index4;
+    }
+    auto ChooseRandomFourthSlot()
+    {
+        int Index5 = Index5 = rand() % 7;
+        if (Index5 == 7)
+            Index5 -= 2;
+
+        return Index5;
+    }
+    auto ChooseRandomFifthSlot()
+    {
+        int Index6 = Index6 = rand() % 6;
+        if (Index6 == 6)
+            Index6 -= 2;
+
+        return Index6;
+    }
+>>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
 
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
     {
@@ -326,13 +369,19 @@ namespace Hooks
         
 
         UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+<<<<<<< HEAD
         
+=======
+>>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
         UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
         UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
         UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
         UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
         UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
+<<<<<<< HEAD
         
+=======
+>>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
 
         switch (loadoutToUse)
         {
