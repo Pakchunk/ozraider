@@ -59,53 +59,54 @@ namespace Hooks
 
     auto ChooseRandomPickaxeIndex()
     {
-        static int Index = Index = rand() % 42;
-        if (Index == 42)
+        static int Index = Index = rand() % 43;
+        if (Index == 43)
             Index -= 2;
 
         return Index;
     }
+    
+        auto ChooseRandomAssaultRifle()
+        {
+            int Index2 = Index2 = rand() % 18; //one more than actual number.
+            if (Index2 == 18)
+                Index2 -= 2;
 
-    auto ChooseRandomAssaultRifle()
-    {
-        int Index2 = Index2 = rand() % 17;
-        if (Index2 == 17)
-            Index2 -= 2;
+            return Index2;
+        }
+        auto ChooseRandomShotgun()
+        {
+            int Index3 = Index3 = rand() % 8;
+            if (Index3 == 8)
+                Index3 -= 2;
 
-        return Index2;
-    }
-    auto ChooseRandomShotgun()
-    {
-        int Index3 = Index3 = rand() % 9;
-        if (Index3 == 9)
-            Index3 -= 2;
+            return Index3;
+        }
+        auto ChooseRandomSniper()
+        {
+            int Index4 = Index4 = rand() % 24;
+            if (Index4 == 24)
+                Index4 -= 2;
 
-        return Index3;
-    }
-    auto ChooseRandomSniper()
-    {
-        int Index4 = Index4 = rand() % 23;
-        if (Index4 == 23)
-            Index4 -= 2;
+            return Index4;
+        }
+        auto ChooseRandomFourthSlot()
+        {
+            int Index5 = Index5 = rand() % 5;
+            if (Index5 == 5)
+                Index5 -= 2;
 
-        return Index4;
-    }
-    auto ChooseRandomFourthSlot()
-    {
-        int Index5 = Index5 = rand() % 5;
-        if (Index5 == 5)
-            Index5 -= 2;
+            return Index5;
+        }
+        auto ChooseRandomFifthSlot()
+        {
+            int Index6 = Index6 = rand() % 7;
+            if (Index6 == 7)
+                Index6 -= 2;
 
-        return Index5;
-    }
-    auto ChooseRandomFifthSlot()
-    {
-        int Index6 = Index6 = rand() % 6;
-        if (Index6 == 6)
-            Index6 -= 2;
-
-        return Index6;
-    }
+            return Index6;
+        }
+    
 
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
     {
@@ -185,9 +186,9 @@ namespace Hooks
                 }
             }
         }
-
+        
         std::string PickaxePool[42] = {
-            "WID_Harvest_Pickaxe_Prismatic"
+            "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_Anchor_Athena",
             "WID_Harvest_Pickaxe_ArtDeco",
             "WID_Harvest_Pickaxe_Assassin",
@@ -214,7 +215,6 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Pizza",
             "WID_Harvest_Pickaxe_Plunger",
             "WID_Harvest_Pickaxe_PotOfGold",
-            "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_RockerPunk",
             "WID_Harvest_Pickaxe_Scavenger",
             "WID_Harvest_Pickaxe_Shark_Athena",
@@ -232,7 +232,7 @@ namespace Hooks
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
         std::string AssaultRiflePool[17] = {
-            "WID_Assault_Auto_Athena_C_Ore_T03"
+            "WID_Assault_Auto_Athena_C_Ore_T03",
             "WID_Assault_Auto_Athena_UC_Ore_T03",
             "WID_Assault_Auto_Athena_R_Ore_T03",
             "WID_Assault_AutoHigh_Athena_VR_Ore_T03",
@@ -251,9 +251,9 @@ namespace Hooks
             "WID_Pistol_Scavenger_Athena_VR_Ore_T03"
             
         };
-        std::string ShotgunPool[9] = {
-            "WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
-            "WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
+        std::string ShotgunPool[7] = {
+            //"WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
+            //"WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_VR_Ore_T03",
@@ -295,11 +295,11 @@ namespace Hooks
             "Athena_StickyGrenade"
 
         };
-        std::string FifthSlotPool[6] = {
+        std::string FifthSlotPool[4] = {
             "Athena_PurpleStuff",
             "Athena_Medkit",
-            "Athena_Shields",
-            "Athena_ShieldSmall",
+            //"Athena_Shields",
+            //"Athena_ShieldSmall",
             "Athena_Bandage",
             "Athena_SuperMedkit"
         };
@@ -321,15 +321,18 @@ namespace Hooks
 
         int Index6 = ChooseRandomFifthSlot();
         std::cout << Index6 << ": Fifth Slot Index\n";
+        
 
         
 
         UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        
         UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
         UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
         UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
         UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
         UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
+        
 
         switch (loadoutToUse)
         {
@@ -392,11 +395,11 @@ namespace Hooks
         }
 
         auto CheatManager = CreateCheatManager(PlayerController);
-        
+        CheatManager->ToggleInfiniteAmmo();
         CheatManager->ToggleInfiniteDurability();
         if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase == EAthenaGamePhase::Warmup)
             CheatManager->God();
-            CheatManager->ToggleInfiniteAmmo();
+            
 
         if (PlayerController->Pawn)
         {
@@ -626,7 +629,7 @@ namespace Hooks
                     }
                 }
                 auto DeadPawn = (AFortPlayerPawnAthena*)DeadPC->Pawn;
-                if (DeadPawn->IsSkydiving() && IsKiller)
+                if (DeadPawn->IsSkydiving() && IsKiller && bPlayground)
                 {
                     static_cast<AFortPlayerControllerAthena*>(KillerPawn->Controller)->ClientOnPawnDied(Params->DeathReport);
                 }
