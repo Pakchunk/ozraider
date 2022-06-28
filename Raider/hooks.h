@@ -68,7 +68,7 @@ namespace Hooks
 
     auto ChooseRandomAssaultRifle()
     {
-        static int Index2 = Index2 = rand() % 13;
+        int Index2 = Index2 = rand() % 13;
         if (Index2 == 13)
             Index2 -= 2;
 
@@ -76,7 +76,7 @@ namespace Hooks
     }
     auto ChooseRandomShotgun()
     {
-        static int Index3 = Index3 = rand() % 11;
+        int Index3 = Index3 = rand() % 11;
         if (Index3 == 11)
             Index3 -= 2;
 
@@ -84,7 +84,7 @@ namespace Hooks
     }
     auto ChooseRandomSniper()
     {
-        static int Index4 = Index4 = rand() % 21;
+        int Index4 = Index4 = rand() % 21;
         if (Index4 == 21)
             Index4 -= 2;
 
@@ -92,7 +92,7 @@ namespace Hooks
     }
     auto ChooseRandomFourthSlot()
     {
-        static int Index5 = Index5 = rand() % 7;
+        int Index5 = Index5 = rand() % 7;
         if (Index5 == 7)
             Index5 -= 2;
 
@@ -100,7 +100,7 @@ namespace Hooks
     }
     auto ChooseRandomFifthSlot()
     {
-        static int Index6 = Index6 = rand() % 6;
+        int Index6 = Index6 = rand() % 6;
         if (Index6 == 6)
             Index6 -= 2;
 
@@ -322,12 +322,12 @@ namespace Hooks
 
         
 
-        static UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
-        static UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
-        static UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
-        static UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
-        static UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
-        static UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
+        UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
+        UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
+        UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
+        UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
+        UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
 
         switch (loadoutToUse)
         {
