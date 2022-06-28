@@ -59,8 +59,8 @@ namespace Hooks
 
     auto ChooseRandomPickaxeIndex()
     {
-        static int Index = Index = rand() % 42;
-        if (Index == 42)
+        static int Index = Index = rand() % 43;
+        if (Index == 43)
             Index -= 2;
 
         return Index;
@@ -68,6 +68,7 @@ namespace Hooks
     
         auto ChooseRandomAssaultRifle()
         {
+<<<<<<< Updated upstream
             int Index2 = Index2 = rand() % 17;
             if (Index2 == 17)
                 Index2 -= 2;
@@ -138,18 +139,53 @@ namespace Hooks
         int Index5 = Index5 = rand() % 7;
         if (Index5 == 7)
             Index5 -= 2;
+=======
+            int Index2 = Index2 = rand() % 18; //one more than actual number.
+            if (Index2 == 18)
+                Index2 -= 2;
 
-        return Index5;
-    }
-    auto ChooseRandomFifthSlot()
-    {
-        int Index6 = Index6 = rand() % 6;
-        if (Index6 == 6)
-            Index6 -= 2;
+            return Index2;
+        }
+        auto ChooseRandomShotgun()
+        {
+            int Index3 = Index3 = rand() % 8;
+            if (Index3 == 8)
+                Index3 -= 2;
 
+            return Index3;
+        }
+        auto ChooseRandomSniper()
+        {
+            int Index4 = Index4 = rand() % 24;
+            if (Index4 == 24)
+                Index4 -= 2;
+
+            return Index4;
+        }
+        auto ChooseRandomFourthSlot()
+        {
+            int Index5 = Index5 = rand() % 5;
+            if (Index5 == 5)
+                Index5 -= 2;
+>>>>>>> Stashed changes
+
+            return Index5;
+        }
+        auto ChooseRandomFifthSlot()
+        {
+            int Index6 = Index6 = rand() % 7;
+            if (Index6 == 7)
+                Index6 -= 2;
+
+<<<<<<< Updated upstream
         return Index6;
     }
 >>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
+=======
+            return Index6;
+        }
+    
+>>>>>>> Stashed changes
 
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
     {
@@ -294,9 +330,9 @@ namespace Hooks
             "WID_Pistol_Scavenger_Athena_VR_Ore_T03"
             
         };
-        std::string ShotgunPool[9] = {
-            "WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
-            "WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
+        std::string ShotgunPool[7] = {
+            //"WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
+            //"WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_VR_Ore_T03",
@@ -338,11 +374,11 @@ namespace Hooks
             "Athena_StickyGrenade"
 
         };
-        std::string FifthSlotPool[6] = {
+        std::string FifthSlotPool[4] = {
             "Athena_PurpleStuff",
             "Athena_Medkit",
-            "Athena_Shields",
-            "Athena_ShieldSmall",
+            //"Athena_Shields",
+            //"Athena_ShieldSmall",
             "Athena_Bandage",
             "Athena_SuperMedkit"
         };
@@ -369,19 +405,27 @@ namespace Hooks
         
 
         UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+<<<<<<< Updated upstream
 <<<<<<< HEAD
         
 =======
 >>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
+=======
+        
+>>>>>>> Stashed changes
         UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
         UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
         UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
         UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
         UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
+<<<<<<< Updated upstream
 <<<<<<< HEAD
         
 =======
 >>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
+=======
+        
+>>>>>>> Stashed changes
 
         switch (loadoutToUse)
         {

@@ -10,7 +10,7 @@ static bool bStartedBus = false;
 
 // GUI VARIABLES
 // game
-bool bBusOnLocations = false;
+bool bBusOnLocations = true;
 bool bBuildingAllowed = true;
 bool bRespawn = false;
 bool bHideAndSeek = false;
@@ -42,7 +42,7 @@ namespace GUI
 {
     auto getRandomLocation()
     {
-        FVector LocationPool[21] = 
+        FVector LocationPool[22] = 
         {
             { 24426, 37710, 17525 }, // retail row
             { 50018, 73844, 17525 }, // lonely lodge
@@ -65,10 +65,10 @@ namespace GUI
             { 7760, 76702, 17525 }, //race track
             { 38374, -94726, 17525 }, //Soccer field
             { 70000, -40121, 17525 }, // Loot Lake
-            //{ -123778, -112480, 17525 } //Spawn Island
+            { -123778, -112480, 17525 } //Spawn Island
         };
 
-        return LocationPool[rand() % 21];
+        return LocationPool[rand() % 23];
     }
 
     std::mutex mtx;
