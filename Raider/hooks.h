@@ -68,78 +68,6 @@ namespace Hooks
     
         auto ChooseRandomAssaultRifle()
         {
-<<<<<<< Updated upstream
-            int Index2 = Index2 = rand() % 17;
-            if (Index2 == 17)
-                Index2 -= 2;
-
-<<<<<<< HEAD
-            return Index2;
-        }
-        auto ChooseRandomShotgun()
-        {
-            int Index3 = Index3 = rand() % 9;
-            if (Index3 == 9)
-                Index3 -= 2;
-
-            return Index3;
-        }
-        auto ChooseRandomSniper()
-        {
-            int Index4 = Index4 = rand() % 23;
-            if (Index4 == 23)
-                Index4 -= 2;
-
-            return Index4;
-        }
-        auto ChooseRandomFourthSlot()
-        {
-            int Index5 = Index5 = rand() % 5;
-            if (Index5 == 5)
-                Index5 -= 2;
-
-            return Index5;
-        }
-        auto ChooseRandomFifthSlot()
-        {
-            int Index6 = Index6 = rand() % 6;
-            if (Index6 == 6)
-                Index6 -= 2;
-
-            return Index6;
-        }
-    
-=======
-    auto ChooseRandomAssaultRifle()
-    {
-        int Index2 = Index2 = rand() % 13;
-        if (Index2 == 13)
-            Index2 -= 2;
-
-        return Index2;
-    }
-    auto ChooseRandomShotgun()
-    {
-        int Index3 = Index3 = rand() % 11;
-        if (Index3 == 11)
-            Index3 -= 2;
-
-        return Index3;
-    }
-    auto ChooseRandomSniper()
-    {
-        int Index4 = Index4 = rand() % 21;
-        if (Index4 == 21)
-            Index4 -= 2;
-
-        return Index4;
-    }
-    auto ChooseRandomFourthSlot()
-    {
-        int Index5 = Index5 = rand() % 7;
-        if (Index5 == 7)
-            Index5 -= 2;
-=======
             int Index2 = Index2 = rand() % 18; //one more than actual number.
             if (Index2 == 18)
                 Index2 -= 2;
@@ -167,7 +95,6 @@ namespace Hooks
             int Index5 = Index5 = rand() % 5;
             if (Index5 == 5)
                 Index5 -= 2;
->>>>>>> Stashed changes
 
             return Index5;
         }
@@ -177,15 +104,9 @@ namespace Hooks
             if (Index6 == 7)
                 Index6 -= 2;
 
-<<<<<<< Updated upstream
-        return Index6;
-    }
->>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
-=======
             return Index6;
         }
     
->>>>>>> Stashed changes
 
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
     {
@@ -405,27 +326,13 @@ namespace Hooks
         
 
         UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
-<<<<<<< Updated upstream
-<<<<<<< HEAD
         
-=======
->>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
-=======
-        
->>>>>>> Stashed changes
         UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
         UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
         UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
         UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
         UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
-<<<<<<< Updated upstream
-<<<<<<< HEAD
         
-=======
->>>>>>> 1d89125bbead42acaf9efc31038269eb3478d320
-=======
-        
->>>>>>> Stashed changes
 
         switch (loadoutToUse)
         {
