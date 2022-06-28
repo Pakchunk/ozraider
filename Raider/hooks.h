@@ -68,39 +68,39 @@ namespace Hooks
 
     auto ChooseRandomAssaultRifle()
     {
-        static int Index2 = Index2 = rand() % 13;
-        if (Index2 == 13)
+        int Index2 = Index2 = rand() % 17;
+        if (Index2 == 17)
             Index2 -= 2;
 
         return Index2;
     }
     auto ChooseRandomShotgun()
     {
-        static int Index3 = Index3 = rand() % 11;
-        if (Index3 == 11)
+        int Index3 = Index3 = rand() % 9;
+        if (Index3 == 9)
             Index3 -= 2;
 
         return Index3;
     }
     auto ChooseRandomSniper()
     {
-        static int Index4 = Index4 = rand() % 21;
-        if (Index4 == 21)
+        int Index4 = Index4 = rand() % 23;
+        if (Index4 == 23)
             Index4 -= 2;
 
         return Index4;
     }
     auto ChooseRandomFourthSlot()
     {
-        static int Index5 = Index5 = rand() % 7;
-        if (Index5 == 7)
+        int Index5 = Index5 = rand() % 5;
+        if (Index5 == 5)
             Index5 -= 2;
 
         return Index5;
     }
     auto ChooseRandomFifthSlot()
     {
-        static int Index6 = Index6 = rand() % 6;
+        int Index6 = Index6 = rand() % 6;
         if (Index6 == 6)
             Index6 -= 2;
 
@@ -231,37 +231,38 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Teslacoil_Athena",
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
-        std::string AssaultRiflePool[13] = {
+        std::string AssaultRiflePool[17] = {
             "WID_Assault_Auto_Athena_C_Ore_T03"
             "WID_Assault_Auto_Athena_UC_Ore_T03",
             "WID_Assault_Auto_Athena_R_Ore_T03",
             "WID_Assault_AutoHigh_Athena_VR_Ore_T03",
             "WID_Assault_AutoHigh_Athena_SR_Ore_T03",
-            "WID_Assault_Hydraulic_Drum_Athena_SR_Ore_T03",
-            "WID_Assault_Ranged_Athena_R_Ore_T03",
-            "WID_Assault_Ranged_Athena_UC_Ore_T03",
-            "WID_Assault_Ranged_Athena_VR_Ore_T03",
             "WID_Assault_SemiAuto_Athena_C_Ore_T02",
             "WID_Assault_SemiAuto_Athena_R_Ore_T03",
             "WID_Assault_SemiAuto_Athena_UC_Ore_T03",
-            "WID_Assault_SingleShot_Athena_SR_Ore_T03",
+            "WID_Pistol_AutoHeavy_Athena_C_Ore_T02",
+            "WID_Pistol_AutoHeavy_Athena_R_Ore_T03",
+            "WID_Pistol_AutoHeavy_Athena_UC_Ore_T03",
+            "WID_Pistol_AutoHeavySuppressed_Athena_C_Ore_T02",
+            "WID_Pistol_AutoHeavySuppressed_Athena_R_Ore_T03",
+            "WID_Pistol_AutoHeavySuppressed_Athena_UC_Ore_T03",
+            "WID_Pistol_Scavenger_Athena_R_Ore_T03",
+            "WID_Pistol_Scavenger_Athena_UC_Ore_T03",
+            "WID_Pistol_Scavenger_Athena_VR_Ore_T03"
             
         };
-        std::string ShotgunPool[11] = {
+        std::string ShotgunPool[9] = {
             "WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
             "WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
-            "WID_Shotgun_Minigun_Athena_SR_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_VR_Ore_T03",
             "WID_Shotgun_SlugFire_Athena_SR",
             "WID_Shotgun_SlugFire_Athena_VR",
             "WID_Shotgun_Standard_Athena_C_Ore_T03",
-            "WID_Shotgun_Standard_Athena_UC_Ore_T03",
-            "WID_Sniper_Shredder_Athena_SR_Ore_T03"
+            "WID_Shotgun_Standard_Athena_UC_Ore_T03"
         };
-        std::string SniperPool[21] = {
-            "WID_Sniper_AMR_Athena_SR_Ore_T03",
+        std::string SniperPool[23] = {
             "WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03",
             "WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03",
             "WID_Sniper_BoltAction_Scope_Athena_VR_Ore_T03",
@@ -271,26 +272,27 @@ namespace Hooks
             "WID_Sniper_NoScope_Athena_UC_Ore_T03",
             "WID_Sniper_Standard_Scope_Athena_SR_Ore_T03",
             "WID_Sniper_Standard_Scope_Athena_VR_Ore_T03",
-            "WID_Sniper_TripleShot_Athena_SR_Ore_T03",
-            "WID_DualPistol_SemiAuto_Athena_SR_Ore_T03",
-            "WID_DualPistol_SemiAuto_Athena_VR_Ore_T03",
-            "WID_Explosive_Crossbow_Athena_SR",
+            "WID_Pistol_SixShooter_Athena_C_Ore_T02",
+            "WID_Pistol_SixShooter_Athena_R_Ore_T03",
+            "WID_Pistol_SixShooter_Athena_UC_Ore_T03",
+            "WID_RC_Rocket_Athena_SR_T03",
+            "WID_RC_Rocket_Athena_VR_T03",
             "WID_Assault_LMG_Athena_SR_Ore_T03",
             "WID_Assault_LMG_Athena_VR_Ore_T03",
             "WID_Assault_LMGSAW_Athena_R_Ore_T03",
             "WID_Assault_LMGSAW_Athena_VR_Ore_T03",
             "WID_Assault_AutoM4A1_Athena_VR_Ore_T04",
             "WID_Assault_Surgical_Athena_R_Ore_T03",
-            "WID_Assault_Surgical_Athena_VR_Ore_T03"
+            "WID_Assault_Surgical_Athena_VR_Ore_T03",
+            "WID_Pistol_HandCannon_Athena_SR_Ore_T03",
+            "WID_Pistol_HandCannon_Athena_VR_Ore_T03"
         };
-        std::string FourthSlotPool[7] = {
+        std::string FourthSlotPool[5] = {
             "Athena_Bush",
             "Athena_DanceGrenade",
             "Athena_GasGrenade",
-            "Athena_Grenade",
             "Athena_KnockGrenade",
-            "Athena_StickyGrenade",
-            "Athena_TowerGrenade"
+            "Athena_StickyGrenade"
 
         };
         std::string FifthSlotPool[6] = {
@@ -322,12 +324,12 @@ namespace Hooks
 
         
 
-        static UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
-        static UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
-        static UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
-        static UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
-        static UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
-        static UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
+        UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
+        UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
+        UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
+        UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
+        UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
 
         switch (loadoutToUse)
         {
@@ -390,10 +392,11 @@ namespace Hooks
         }
 
         auto CheatManager = CreateCheatManager(PlayerController);
-        CheatManager->ToggleInfiniteAmmo();
+        
         CheatManager->ToggleInfiniteDurability();
         if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase == EAthenaGamePhase::Warmup)
             CheatManager->God();
+            CheatManager->ToggleInfiniteAmmo();
 
         if (PlayerController->Pawn)
         {
@@ -621,6 +624,11 @@ namespace Hooks
                         Pawns.FreeArray();
                         //Spectate(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
                     }
+                }
+                auto DeadPawn = (AFortPlayerPawnAthena*)DeadPC->Pawn;
+                if (DeadPawn->IsSkydiving() && IsKiller)
+                {
+                    static_cast<AFortPlayerControllerAthena*>(KillerPawn->Controller)->ClientOnPawnDied(Params->DeathReport);
                 }
 
                 if (DeadPC->Pawn)
