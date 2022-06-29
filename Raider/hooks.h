@@ -59,19 +59,22 @@ namespace Hooks
         return Index;
     }
     
-
+    
+        /* static auto Location = AssaultRifles[rand() % AssaultRifles.size()];
+        return Location;*/
+    
     
 
     auto ChooseRandomPickaxeIndex()
     {
-        static int Index = Index = rand() % 43;
+        int Index = Index = rand() % 43; //one more than actual number.
         if (Index == 42)
             Index -= 2;
 
         return Index;
     }
     
-        auto ChooseRandomAssaultRifle()
+         auto ChooseRandomAssaultRifle()
         {
             int Index2 = Index2 = rand() % 18; //one more than actual number.
             if (Index2 == 17)
@@ -313,7 +316,7 @@ namespace Hooks
 
 
 
-        int Index = ChooseRandomPickaxeIndex();
+         int Index = ChooseRandomPickaxeIndex();
         std::cout << Index << ": Pickaxe Index\n";
 
         int Index2 = ChooseRandomAssaultRifle();
@@ -338,7 +341,6 @@ namespace Hooks
         
 
         UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
-        
         UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
         UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
         UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
