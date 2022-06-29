@@ -118,6 +118,7 @@
     <ClCompile Include="SDK\FN_UMG_functions.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="framework.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="hidenseek.h" />

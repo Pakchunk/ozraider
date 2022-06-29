@@ -74,6 +74,7 @@
     <ClInclude Include="playground.h">
       <Filter>Gamemodes</Filter>
     </ClInclude>
+    <ClInclude Include="framework.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

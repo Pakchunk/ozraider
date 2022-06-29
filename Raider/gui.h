@@ -22,6 +22,7 @@ bool bLoadoutRegular = true;
 bool bLoadoutExplosives = false;
 bool bLoadoutSnipers = false;
 bool bLoadoutRandom = false;
+bool bAllowStorm = true;
 
 AAthena_GameState_C* GameState;
 AFortPlayerStateAthena* Seeker;
@@ -40,10 +41,43 @@ WeaponLoadout loadoutToUse = WeaponLoadout::REGULAR;
 
 namespace GUI
 {
-    auto getRandomLocation()
+    /* auto getRandomLocation()
     {
-        FVector LocationPool[22] = 
+        FVector LocationPool[25] = 
         {
+            { 24426, 37710, 17525 }, // retail row
+            { 50018, 73844, 17525 }, // lonely lodge
+            { 34278, 867, 9500 }, // dusty depot / factories
+            { 79710, 15677, 17525 }, // tomato town
+            { 103901, -20203, 17525 }, // ANARCHY acres
+            { 86766, -83071, 17525 }, // pleasant park
+            { 2399, -96255, 17525 }, // greasy grove
+            { -35037, -463, 13242 }, // fatal fields
+            { 83375, 50856, 17525 }, // Wailing Woods
+            { 35000, -60121, 20525 }, // Tilted Towers
+            { 40000, -127121, 17525 }, // Snobby Shores
+            { 5000, -60121, 10748 }, // shifty shafts
+            { 110088, -115332, 17525 }, // Haunted Hills
+            { 119126, -86354, 17525 }, // Junk Houses
+            { 130036, -105092, 17525 }, // Junk Junction
+            { 39781, 61621, 17525 }, // Moisty Mire
+            { -68000, -63521, 17525 }, // Flush Factory
+            { 3502, -9183, 10500 }, // Salty Springs
+            { 7760, 76702, 10525 }, //race track
+            { 38374, -94726, 10525 }, //Soccer field
+            { 70000, -40121, 17525 }, // Loot Lake
+            { -26479, 41847, 5700 }, //Prison
+            { 56771, 32818, 6525 }, //Containers/crates
+            { -75353, -8694, 4354 },
+            { -123778, -112480, 17525 } //Spawn Island
+        };
+
+        return LocationPool[rand() % 26];
+    }*/
+    static FVector getRandomLocation()
+    {
+        static std::vector<FVector> Locations = {
+
             { 24426, 37710, 17525 }, // retail row
             { 50018, 73844, 17525 }, // lonely lodge
             { 34278, 867, 9500 }, // dusty depot / factories
@@ -68,9 +102,13 @@ namespace GUI
             { -123778, -112480, 17525 } //Spawn Island
         };
 
-        return LocationPool[rand() % 23];
+        static auto Location = Locations[rand() % Locations.size()];
+        return Location;
     }
+    auto Aircraft = GameState -> GetAircraft(0);
+    
 
+    
     std::mutex mtx;
     void Tick()
     {
@@ -167,6 +205,7 @@ namespace GUI
                                     GameState->AircraftStartTime = 0;
                                     GameState->GetAircraft(0)->FlightInfo.TimeTillDropStart = 0;
                                     GameState->bAircraftIsLocked = false;
+                                    Aircraft->ExitLocation = RandLocation;
                                     GameState->GetAircraft(0)->FlightInfo.FlightStartLocation = FVector_NetQuantize100(RandLocation);
                                     GameState->GetAircraft(0)->FlightInfo.FlightSpeed = 0;
                                     if (bHideAndSeek)
@@ -176,6 +215,20 @@ namespace GUI
                                     if (bPlayground)
                                     {
                                         Playground().InitializePlayground(SoloPlaylist, GameState);
+                                        auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
+                                        if (bAllowStorm)
+                                        {
+                                            GameMode->bSafeZoneActive = true;
+                                            GameMode->bSafeZonePaused = false;
+                                            
+                                            
+                                        }
+
+                                        if (!bAllowStorm)
+                                        {
+                                            GameMode->bSafeZoneActive = false;
+                                            GameMode->bSafeZonePaused = true;
+                                        }
                                     }
                                 }
 
@@ -185,6 +238,8 @@ namespace GUI
                             }
 
                             ZeroGUI::Checkbox(L"Spawn bus on a random location?", &bBusOnLocations);
+
+                            ZeroGUI::Checkbox(L"Allow Storm?", &bAllowStorm);
 
                             if (!bPlayground)
                             {
