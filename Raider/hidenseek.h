@@ -54,7 +54,7 @@ public:
             //EquipLoadout(PC, HiderLoadout);
             //AddItem(PC, nullptr, 0);
             auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
-            Pawn->SetMaxHealth(1);
+            Pawn->SetMaxHealth(50);
             Pawn->SetMaxShield(0);
             EquipLoadout(PC, HiderLoadout);
 
@@ -64,7 +64,7 @@ public:
             auto newPickaxeEntry = FindItemInInventory<UFortWeaponMeleeItemDefinition>(PC, bFoundAgain);
 
             if (bFoundAgain)
-                EquipInventoryItem(PC, PC->WorldInventory->Inventory.ItemInstances[13]->ItemEntry.ItemGuid);
+                EquipInventoryItem(PC, newPickaxeEntry.ItemGuid);
         }
     }
 };

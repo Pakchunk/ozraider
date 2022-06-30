@@ -3,25 +3,16 @@
 #include "gui.h"
 #include "ue4.h"
 #include "game.h"
-#include "framework.h"
 
 class Playground
 {
 public:
     void InitializePlayground(UFortPlaylistAthena* CurrentPlaylist, AAthena_GameState_C* GameState)
     {
-        auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
-        auto Aircraft = GameState->GetAircraft(0);
-        if (Aircraft)
-        {
-            GameState->SafeZonePhase = 5;
-            //GameState->SafeZonesStartTime = 2;
-            //GameMode->SafeZonePhase = 5;
-            
-        }
+        static auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
+        GameMode->bSafeZoneActive = false;
+        GameMode->bSafeZonePaused = true;
         
-        
-
         auto Playlist = CurrentPlaylist;
 
         if (Playlist)
@@ -50,14 +41,18 @@ public:
         PC->RespawnPlayerAfterDeath();
         CM->RespawnPlayer();
         CM->RespawnPlayerServer();
+
+        //PC->ActivateSlot(EFortQuickBars::Primary, 0, 0, true);
+        EquipInventoryItem(PC, PC->WorldInventory->Inventory.ItemInstances[15]->ItemEntry.ItemGuid);
     }
 
     void OnDeath(AFortPlayerPawnAthena* KillerPawn)
     {
-        if (KillerPawn && !KillerPawn->IsDead())
+        return;
+        if (KillerPawn && KillerPawn->GetHealth() > 0)
         {
-            int HealthToGive = 100;
-            if (KillerPawn->GetHealth() > 100)
+            static int HealthToGive = 50;
+            if (KillerPawn->GetHealth() > HealthToGive)
             {
                 HealthToGive = KillerPawn->GetMaxHealth() - KillerPawn->GetHealth();
             }

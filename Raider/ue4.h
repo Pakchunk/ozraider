@@ -18,6 +18,7 @@ static bool bMapFullyLoaded = false;
 
 static std::unordered_set<ABuildingSMActor*> Buildings;
 static AFortOnlineBeaconHost* HostBeacon = nullptr;
+AAthena_GameState_C* GameState;
 
 inline UWorld* GetWorld()
 {
@@ -315,7 +316,7 @@ bool CanBuild(ABuildingSMActor* BuildingActor)
 
 bool CanBuild2(ABuildingSMActor* BuildingActor, AFortPlayerController_ServerCreateBuildingActor_Params* Params)
 {
-    static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
+    //static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
 
     TArray<ABuildingActor*> ExistingBuildings;
     EFortStructuralGridQueryResults bCanBuild = GameState->StructuralSupportSystem->K2_CanAddBuildingActorToGrid(GetWorld(), BuildingActor, BuildingActor->K2_GetActorLocation(), BuildingActor->K2_GetActorRotation(), Params->bMirrored, true, &ExistingBuildings);
@@ -728,6 +729,8 @@ static void InitInventory(AFortPlayerController* PlayerController, bool Secondar
         static auto Heavy = UObject::FindObject<UFortAmmoItemDefinition>("FortAmmoItemDefinition AthenaAmmoDataBulletsHeavy.AthenaAmmoDataBulletsHeavy");
         static auto EditTool = UObject::FindObject<UFortAmmoItemDefinition>("FortEditToolItemDefinition EditTool.EditTool");
         static auto LaunchPad = UObject::FindObject<UFortTrapItemDefinition>("FortTrapItemDefinition TID_Floor_Player_Launch_Pad_Athena.TID_Floor_Player_Launch_Pad_Athena");
+        static auto CampFire = UObject::FindObject<UFortTrapItemDefinition>("FortTrapItemDefinition TID_Floor_Player_Campfire_Athena.TID_Floor_Player_Campfire_Athena");
+        static auto Trap = UObject::FindObject<UFortTrapItemDefinition>("FortTrapItemDefinition TID_Floor_Spikes_Athena_R_T03.TID_Floor_Spikes_Athena_R_T03");
         // static auto Trap = UObject::FindObject<UFortTrapItemDefinition>("FortTrapItemDefinition TID_Floor_Player_Launch_Pad_Athena.TID_Floor_Player_Launch_Pad_Athena");
         // static auto Trap2 = UObject::FindObject<UFortTrapItemDefinition>("FortTrapItemDefinition TID_Wall_Electric_Athena_R_T03.TID_Wall_Electric_Athena_R_T03");
         // static auto Trap3 = UObject::FindObject<UFortTrapItemDefinition>("FortTrapItemDefinition TID_Floor_Spikes_Athena_R_T03.TID_Floor_Spikes_Athena_R_T03");
@@ -739,6 +742,9 @@ static void InitInventory(AFortPlayerController* PlayerController, bool Secondar
         AddItem(PlayerController, Stair, 2, EFortQuickBars::Secondary, 1);
         AddItem(PlayerController, Cone, 3, EFortQuickBars::Secondary, 1);
         AddItem(PlayerController, LaunchPad, 4, EFortQuickBars::Secondary, 1);
+        AddItem(PlayerController, Trap, 5, EFortQuickBars::Secondary, 1);
+        AddItem(PlayerController, CampFire, 6, EFortQuickBars::Secondary, 1);
+
         // AddItem(PlayerController, Trap, 4, EFortQuickBars::Secondary, 1);
         // AddItem(PlayerController, Trap2, 5, EFortQuickBars::Secondary, 1);
         // AddItem(PlayerController, Trap3, 6, EFortQuickBars::Secondary, 1);
@@ -1079,7 +1085,7 @@ static void InitPawn(AFortPlayerControllerAthena* PlayerController, FVector Loc 
     }
 
 
-    UpdateInventory(PlayerController);
+    //UpdateInventory(PlayerController);
 
     ApplyAbilities(Pawn);
 }
@@ -1650,6 +1656,9 @@ void SpawnDeco(AFortDecoTool* Tool, void* _Params)
 
 				Trap->AttachedTo = Params->AttachedActor;
                 Trap->OnRep_AttachedTo();
+
+                auto PlayerState = (AFortPlayerStateAthena*)Pawn->Controller->PlayerState;
+                Trap->Team = PlayerState->TeamIndex;
 
 				auto TrapAbilitySet = Trap->AbilitySet;
 

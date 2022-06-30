@@ -7,8 +7,6 @@
 
 namespace Hooks
 {
-
-    
     bool LocalPlayerSpawnPlayActor(ULocalPlayer* Player, const FString& URL, FString& OutError, UWorld* World) // prevent server's pc from spawning
     {
         if (bTraveled)
@@ -58,63 +56,15 @@ namespace Hooks
         static int Index = GetMath()->STATIC_RandomIntegerInRange(0, 42);
         return Index;
     }
-    
-    
-        /* static auto Location = AssaultRifles[rand() % AssaultRifles.size()];
-        return Location;*/
-    
-    
 
-    auto ChooseRandomPickaxeIndex()
+    static auto ChooseRandomPickaxeIndex()
     {
-        int Index = Index = rand() % 43; //one more than actual number.
-        if (Index == 42)
+        static int Index = Index = rand() % 43;
+        if (Index == 43)
             Index -= 2;
 
         return Index;
     }
-    
-         auto ChooseRandomAssaultRifle()
-        {
-            int Index2 = Index2 = rand() % 18; //one more than actual number.
-            if (Index2 == 17)
-                Index2 -= 2;
-
-            return Index2;
-        }
-        auto ChooseRandomShotgun()
-        {
-            int Index3 = Index3 = rand() % 8;
-            if (Index3 == 7)
-                Index3 -= 2;
-
-            return Index3;
-        }
-        auto ChooseRandomSniper()
-        {
-            int Index4 = Index4 = rand() % 24;
-            if (Index4 == 23)
-                Index4 -= 2;
-
-            return Index4;
-        }
-        auto ChooseRandomFourthSlot()
-        {
-            int Index5 = Index5 = rand() % 5;
-            if (Index5 == 4)
-                Index5 -= 2;
-
-            return Index5;
-        }
-        auto ChooseRandomFifthSlot()
-        {
-            int Index6 = Index6 = rand() % 7;
-            if (Index6 == 6)
-                Index6 -= 2;
-
-            return Index6;
-        }
-    
 
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
     {
@@ -194,10 +144,8 @@ namespace Hooks
                 }
             }
         }
-        
 
-        
-        std::string PickaxePool[42] = {
+        static std::string PickaxePool[43] = {
             "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_Anchor_Athena",
             "WID_Harvest_Pickaxe_ArtDeco",
@@ -225,6 +173,7 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Pizza",
             "WID_Harvest_Pickaxe_Plunger",
             "WID_Harvest_Pickaxe_PotOfGold",
+            "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_RockerPunk",
             "WID_Harvest_Pickaxe_Scavenger",
             "WID_Harvest_Pickaxe_Shark_Athena",
@@ -241,117 +190,17 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Teslacoil_Athena",
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
-        std::string AssaultRiflePool[17] = {
-            "WID_Assault_Auto_Athena_C_Ore_T03",
-            "WID_Assault_Auto_Athena_UC_Ore_T03",
-            "WID_Assault_Auto_Athena_R_Ore_T03",
-            "WID_Assault_AutoHigh_Athena_VR_Ore_T03",
-            "WID_Assault_AutoHigh_Athena_SR_Ore_T03",
-            "WID_Assault_SemiAuto_Athena_C_Ore_T02",
-            "WID_Assault_SemiAuto_Athena_R_Ore_T03",
-            "WID_Assault_SemiAuto_Athena_UC_Ore_T03",
-            "WID_Pistol_AutoHeavy_Athena_C_Ore_T02",
-            "WID_Pistol_AutoHeavy_Athena_R_Ore_T03",
-            "WID_Pistol_AutoHeavy_Athena_UC_Ore_T03",
-            "WID_Pistol_AutoHeavySuppressed_Athena_C_Ore_T02",
-            "WID_Pistol_AutoHeavySuppressed_Athena_R_Ore_T03",
-            "WID_Pistol_AutoHeavySuppressed_Athena_UC_Ore_T03",
-            "WID_Pistol_Scavenger_Athena_R_Ore_T03",
-            "WID_Pistol_Scavenger_Athena_UC_Ore_T03",
-            "WID_Pistol_Scavenger_Athena_VR_Ore_T03"
-            
-        };
-        std::string ShotgunPool[7] = {
-            //"WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
-            //"WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
-            "WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
-            "WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
-            "WID_Shotgun_SemiAuto_Athena_VR_Ore_T03",
-            "WID_Shotgun_SlugFire_Athena_SR",
-            "WID_Shotgun_SlugFire_Athena_VR",
-            "WID_Shotgun_Standard_Athena_C_Ore_T03",
-            "WID_Shotgun_Standard_Athena_UC_Ore_T03"
-        };
-        std::string SniperPool[23] = {
-            "WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03",
-            "WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03",
-            "WID_Sniper_BoltAction_Scope_Athena_VR_Ore_T03",
-            "WID_Sniper_Crossbow_Athena_R_Ore_T03",
-            "WID_Sniper_Crossbow_Athena_VR_Ore_T03",
-            "WID_Sniper_NoScope_Athena_R_Ore_T03",
-            "WID_Sniper_NoScope_Athena_UC_Ore_T03",
-            "WID_Sniper_Standard_Scope_Athena_SR_Ore_T03",
-            "WID_Sniper_Standard_Scope_Athena_VR_Ore_T03",
-            "WID_Pistol_SixShooter_Athena_C_Ore_T02",
-            "WID_Pistol_SixShooter_Athena_R_Ore_T03",
-            "WID_Pistol_SixShooter_Athena_UC_Ore_T03",
-            "WID_RC_Rocket_Athena_SR_T03",
-            "WID_RC_Rocket_Athena_VR_T03",
-            "WID_Assault_LMG_Athena_SR_Ore_T03",
-            "WID_Assault_LMG_Athena_VR_Ore_T03",
-            "WID_Assault_LMGSAW_Athena_R_Ore_T03",
-            "WID_Assault_LMGSAW_Athena_VR_Ore_T03",
-            "WID_Assault_AutoM4A1_Athena_VR_Ore_T04",
-            "WID_Assault_Surgical_Athena_R_Ore_T03",
-            "WID_Assault_Surgical_Athena_VR_Ore_T03",
-            "WID_Pistol_HandCannon_Athena_SR_Ore_T03",
-            "WID_Pistol_HandCannon_Athena_VR_Ore_T03"
-        };
-        std::string FourthSlotPool[5] = {
-            "Athena_Bush",
-            "Athena_DanceGrenade",
-            "Athena_GasGrenade",
-            "Athena_KnockGrenade",
-            "Athena_StickyGrenade"
 
-        };
-        std::string FifthSlotPool[4] = {
-            "Athena_PurpleStuff",
-            "Athena_Medkit",
-            //"Athena_Shields",
-            //"Athena_ShieldSmall",
-            "Athena_Bandage",
-            "Athena_SuperMedkit"
-        };
-
-
-
-         int Index = ChooseRandomPickaxeIndex();
+        static int Index = ChooseRandomPickaxeIndex();
         std::cout << Index << ": Pickaxe Index\n";
 
-        int Index2 = ChooseRandomAssaultRifle();
-        std::cout << Index2 << ": Assault Rifle Index\n";
-
-        int Index3 = ChooseRandomShotgun();
-        std::cout << Index3 << ": Shotgun Index\n";
-
-        int Index4 = ChooseRandomSniper();
-        std::cout << Index4 << ": Sniper Index\n";
-
-        int Index5 = ChooseRandomFourthSlot();
-        std::cout << Index5 << ": Fourth Slot Index\n";
-
-        int Index6 = ChooseRandomFifthSlot();
-        std::cout << Index6 << ": Fifth Slot Index\n";
-
-        
-
-        
-
-        
-
-        UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
-        UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
-        UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
-        UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
-        UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
-        UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
-        
+        static UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
 
         switch (loadoutToUse)
         {
             case WeaponLoadout::REGULAR:
             {
+                /*
                 static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
                 {
                     Pickaxe,
@@ -359,9 +208,20 @@ namespace Hooks
                     FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03"),
                     //FindWID("WID_Pistol_Scavenger_Athena_R_Ore_T03"),
                     FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
-                    FindWID("Athena_KnockGrenade"),
+                    FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03"),
                     FindWID("Athena_PurpleStuff")
                 };
+                */
+                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
+                    Pickaxe,
+                    FindWID("WID_Assault_LMG_Athena_SR_Ore_T03"),
+                    FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03"),
+                    //FindWID("WID_Pistol_Scavenger_Athena_R_Ore_T03"),
+                    FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
+                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
+                    FindWID("WID_Assault_SemiAuto_Athena_R_Ore_T03")
+                };
+
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
             }
@@ -393,19 +253,6 @@ namespace Hooks
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
             }
-            case WeaponLoadout::RANDOM:
-            {
-                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
-                    Pickaxe,
-                    RAssaultRifle,
-                    RShotgun,
-                    RSniper,
-                    RFourSlot,
-                    RFiveSlot,
-                };
-                EquipLoadout(PlayerController, FortLoadout);
-                break;
-            }
         }
 
         auto CheatManager = CreateCheatManager(PlayerController);
@@ -413,7 +260,6 @@ namespace Hooks
         CheatManager->ToggleInfiniteDurability();
         if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase == EAthenaGamePhase::Warmup)
             CheatManager->God();
-            
 
         if (PlayerController->Pawn)
         {
@@ -522,6 +368,20 @@ namespace Hooks
         DETOUR_END
     }
 
+    void DetachNetworkHooks()
+    {
+        DETOUR_START
+        DetourDetachE(Native::World::WelcomePlayer, WelcomePlayer);
+        DetourDetachE(Native::Actor::GetNetMode, GetNetMode);
+        DetourDetachE(Native::World::NotifyControlMessage, World_NotifyControlMessage);
+        DetourDetachE(Native::World::SpawnPlayActor, SpawnPlayActor);
+        DetourDetachE(Native::OnlineBeaconHost::NotifyControlMessage, Beacon_NotifyControlMessage);
+        DetourDetachE(Native::OnlineSession::KickPlayer, KickPlayer);
+        DetourDetachE(Native::GameViewportClient::PostRender, PostRender);
+        DetourDetachE(Native::GC::CollectGarbage, CollectGarbage);
+        DETOUR_END
+    }
+
     UNetConnection* IAmTheOneWhoSpectates;
     AFortPlayerStateAthena* ToSpectatePlayerState;
 
@@ -529,6 +389,40 @@ namespace Hooks
     {
         IAmTheOneWhoSpectates = TWTS;
         ToSpectatePlayerState = TWSP;
+    }
+
+    auto GetDeathReason(FFortPlayerDeathReport DeathReport)
+    {
+        static std::map<std::string, EDeathCause> DeathReasonMap
+        {
+            { "weapon.ranged.shotgun", EDeathCause::Shotgun },
+            { "weapon.ranged.assault", EDeathCause::Rifle },
+            { "Gameplay.Damage.Environment.Falling", EDeathCause::FallDamage },
+            { "weapon.ranged.sniper", EDeathCause::Sniper },
+            { "Weapon.Ranged.SMG", EDeathCause::SMG },
+            { "weapon.ranged.heavy.rocket_launcher", EDeathCause::RocketLauncher },
+            { "weapon.ranged.heavy.grenade_launcher", EDeathCause::GrenadeLauncher },
+            { "Weapon.ranged.heavy.grenade", EDeathCause::Grenade },
+            { "Weapon.Ranged.Heavy.Minigun", EDeathCause::Minigun },
+            { "Weapon.Ranged.Crossbow", EDeathCause::Bow },
+            { "trap.floor", EDeathCause::Trap },
+            { "weapon.ranged.pistol", EDeathCause::Pistol },
+            { "Gameplay.Damage.OutsideSafeZone", EDeathCause::OutsideSafeZone },
+            { "Weapon.Melee.Impact.Pickaxe", EDeathCause::Melee }
+        };
+
+        for (int i = 0; i < DeathReport.Tags.GameplayTags.Num(); i++)
+        {
+            auto nameTag = DeathReport.Tags.GameplayTags[i].TagName.ToString();
+
+            for (auto Map : DeathReasonMap)
+            {
+                if (nameTag == Map.first) return Map.second;
+                else continue;
+            }
+        }
+
+        return EDeathCause::Unspecified;
     }
 
     void ProcessEventHook(UObject* Object, UFunction* Function, void* Parameters)
@@ -548,6 +442,50 @@ namespace Hooks
                 printf("[InitNetworkHooks] Done\n");
             }
         }
+
+        if (Function->GetName().find("Tick") != std::string::npos && bRestart)
+        {
+            bRestart = false;
+            bTraveled = false;
+            bPlayButton = false;
+            bListening = false;
+            bReadyToStart = false;
+            bSpawnedFloorLoot = false;
+            bMapFullyLoaded = false;
+            bStartedBus = false;
+            HostBeacon = nullptr;
+            DetachNetworkHooks();
+            GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"open frontend", GetPlayerController());
+        }
+
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerPlayEmoteItem")
+        {
+            auto Params = (AFortPlayerController_ServerPlayEmoteItem_Params*)Parameters;
+            auto PC = (AFortPlayerControllerAthena*)Object;
+            auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
+
+            auto FortAnimInstance = static_cast<UFortAnimInstance*>(Pawn->Mesh->GetAnimInstance());
+
+            if (!FortAnimInstance->bIsJumping && !FortAnimInstance->bIsFalling && !PC->bIsPlayerActivelyMoving)
+            {
+                if (Pawn->bIsCrouched)
+                    Pawn->UnCrouch(true);
+
+                auto EmoteAsset = static_cast<AFortPlayerController_ServerPlayEmoteItem_Params*>(Params)->EmoteAsset;
+                auto Montage = EmoteAsset->GetAnimationHardReference(EFortCustomBodyType::All, EFortCustomGender::Both);
+                
+                auto AnimInstance = (UFortAnimInstance*)Pawn->Mesh->GetAnimInstance();
+                PC->PlayEmoteItem(EmoteAsset);
+                AnimInstance->Montage_Play(Montage, 1, EMontagePlayReturnType::Duration, 0, true);
+                Pawn->RepAnimMontageInfo.AnimMontage = Montage;
+                Pawn->RepAnimMontageInfo.PlayRate = 1;
+                Pawn->OnRep_ReplicatedAnimMontage();
+                Pawn->ForceNetUpdate();
+                
+            }
+            
+        }
+
 
         if (Function->GetFullName() == "Function BP_VictoryDrone.BP_VictoryDrone_C.OnSpawnOutAnimEnded")
         {
@@ -576,38 +514,7 @@ namespace Hooks
                 }
             }
         }
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerAttemptInteract")
-        {
-            auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
-            auto PC = (AFortPlayerControllerAthena*)Object;
 
-            if (Params->ReceivingActor)
-            {
-                if (Params->ReceivingActor->IsA(APlayerPawn_Athena_C::StaticClass()))
-                {
-                    auto DBNOPawn = (APlayerPawn_Athena_C*)Params->ReceivingActor;
-                    auto DBNOPC = (AFortPlayerControllerAthena*)DBNOPawn->Controller;
-
-                    if (DBNOPawn && DBNOPC)
-                    {
-                        DBNOPawn->ReviveFromDBNO(PC);
-                    }
-                }
-
-                if (Params->ReceivingActor->IsA(ABuildingContainer::StaticClass()))
-                {
-                    auto Container = (ABuildingContainer*)Params->ReceivingActor;
-
-                    Container->bAlreadySearched = true;
-                    Container->OnRep_bAlreadySearched();
-
-                    
-                }
-            }
-        }
-                          
-                      
-        
         if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied")
         {
             auto Params = static_cast<AFortPlayerControllerZone_ClientOnPawnDied_Params*>(Parameters);
@@ -617,10 +524,6 @@ namespace Hooks
 
             if (DeadPC && Params)
             {
-                //TArray<AActor*> Pawns;
-                //static auto GameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass()->CreateDefaultObject();
-                //GameplayStatics->STATIC_GetAllActorsOfClass(GetWorld(), APlayerPawn_Athena_C::StaticClass(), &Pawns);
-                //auto GameState = (AAthena_GameState_C*)GetWorld()->AuthorityGameMode->GameState;
                 IsKiller = Params->DeathReport.KillerPlayerState ? true : false;
                 auto KillerPawn = Params->DeathReport.KillerPawn;
                 auto KillerPlayerState = (AFortPlayerStateAthena*)Params->DeathReport.KillerPlayerState;
@@ -643,12 +546,12 @@ namespace Hooks
                 deathInfo.bDBNO = false;
                 deathInfo.DeathLocation = DeadPawnLocation;
                 deathInfo.Distance = Params->DeathReport.KillerPawn ? Params->DeathReport.KillerPawn->GetDistanceTo(DeadPC->Pawn) : 0;
-                deathInfo.DeathCause = KillerPlayerState ? EDeathCause::Banhammer : EDeathCause::FallDamage; // TODO: Determine what the actual death cause was.
+                deathInfo.DeathCause = GetDeathReason(Params->DeathReport);
                 deathInfo.FinisherOrDowner = KillerPlayerState ? KillerPlayerState : DeadPlayerState;
                 DeadPlayerState->DeathInfo = deathInfo;
                 DeadPlayerState->OnRep_DeathInfo();
 
-                if (IsKiller)
+                if (IsKiller && KillerPlayerState != DeadPlayerState)
                 {
                     KillerPlayerState->ClientReportKill(DeadPlayerState);
                     KillerPlayerState->KillScore++;
@@ -659,8 +562,6 @@ namespace Hooks
                 }
                 else
                 {
-                    deathInfo.DeathCause = EDeathCause::FallDamage;
-                    deathInfo.FinisherOrDowner = DeadPlayerState;
                     DeadPlayerState->ClientReportKill(DeadPlayerState);
                     if (GameState->PlayersLeft > 0 && !bPlayground)
                     {
@@ -673,11 +574,11 @@ namespace Hooks
                         //Spectate(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
                     }
                 }
-                auto DeadPawn = (AFortPlayerPawnAthena*)DeadPC->Pawn;
-                if (DeadPawn->IsSkydiving() && IsKiller && bPlayground)
-                {
-                    static_cast<AFortPlayerControllerAthena*>(KillerPawn->Controller)->ClientOnPawnDied(Params->DeathReport);
-                }
+
+                // sometimes checking if the killer is the dead player is important
+                // if you dont and u die in storm and you were gliding it would loop this (no joke) 2,147,483,647 times, thus causing a stack overflow
+                if (bPlayground && ((AFortPlayerPawnAthena*)DeadPC->Pawn)->IsSkydiving() && IsKiller && KillerPlayerState != DeadPC->PlayerState)
+                    ((AFortPlayerControllerAthena*)KillerPawn->Controller)->ClientOnPawnDied(Params->DeathReport);
 
                 if (DeadPC->Pawn)
                     DeadPC->Pawn->K2_DestroyActor();

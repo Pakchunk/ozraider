@@ -10,21 +10,20 @@ static bool bStartedBus = false;
 
 // GUI VARIABLES
 // game
-bool bBusOnLocations = true;
+bool bBusOnLocations = false;
 bool bBuildingAllowed = true;
 bool bRespawn = false;
 bool bHideAndSeek = false;
 bool bPlayground = false;
 bool bReadyToStart = false;
+bool bStormPaused = false;
+bool bRestart = false;
 // pregame
 bool bCosmetics = true;
 bool bLoadoutRegular = true;
 bool bLoadoutExplosives = false;
 bool bLoadoutSnipers = false;
-bool bLoadoutRandom = false;
-bool bAllowStorm = true;
 
-AAthena_GameState_C* GameState;
 AFortPlayerStateAthena* Seeker;
 static UFortPlaylistAthena* SoloPlaylist;
 
@@ -33,48 +32,14 @@ enum class WeaponLoadout
 {
     REGULAR,
     EXPLOSIVES,
-    SNIPERS,
-    RANDOM
+    SNIPERS
 };
 
 WeaponLoadout loadoutToUse = WeaponLoadout::REGULAR;
 
 namespace GUI
 {
-    /* auto getRandomLocation()
-    {
-        FVector LocationPool[25] = 
-        {
-            { 24426, 37710, 17525 }, // retail row
-            { 50018, 73844, 17525 }, // lonely lodge
-            { 34278, 867, 9500 }, // dusty depot / factories
-            { 79710, 15677, 17525 }, // tomato town
-            { 103901, -20203, 17525 }, // ANARCHY acres
-            { 86766, -83071, 17525 }, // pleasant park
-            { 2399, -96255, 17525 }, // greasy grove
-            { -35037, -463, 13242 }, // fatal fields
-            { 83375, 50856, 17525 }, // Wailing Woods
-            { 35000, -60121, 20525 }, // Tilted Towers
-            { 40000, -127121, 17525 }, // Snobby Shores
-            { 5000, -60121, 10748 }, // shifty shafts
-            { 110088, -115332, 17525 }, // Haunted Hills
-            { 119126, -86354, 17525 }, // Junk Houses
-            { 130036, -105092, 17525 }, // Junk Junction
-            { 39781, 61621, 17525 }, // Moisty Mire
-            { -68000, -63521, 17525 }, // Flush Factory
-            { 3502, -9183, 10500 }, // Salty Springs
-            { 7760, 76702, 10525 }, //race track
-            { 38374, -94726, 10525 }, //Soccer field
-            { 70000, -40121, 17525 }, // Loot Lake
-            { -26479, 41847, 5700 }, //Prison
-            { 56771, 32818, 6525 }, //Containers/crates
-            { -75353, -8694, 4354 },
-            { -123778, -112480, 17525 } //Spawn Island
-        };
-
-        return LocationPool[rand() % 26];
-    }*/
-    static FVector getRandomLocation()
+    auto getRandomLocation()
     {
         static std::vector<FVector> Locations = {
 
@@ -105,10 +70,7 @@ namespace GUI
         static auto Location = Locations[rand() % Locations.size()];
         return Location;
     }
-    auto Aircraft = GameState -> GetAircraft(0);
-    
 
-    
     std::mutex mtx;
     void Tick()
     {
@@ -125,7 +87,7 @@ namespace GUI
         {
             if (bListening && HostBeacon)
             {
-                static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
+                /* static auto*/ GameState = (AAthena_GameState_C*)GetWorld()->GameState;
                 static APlayerState* currentPlayer = nullptr;
                 static int PlayerIndex = -1;
 
@@ -203,9 +165,10 @@ namespace GUI
                                     std::cout << RandLocation << "\n";
 
                                     GameState->AircraftStartTime = 0;
+                                    GameState->GetAircraft(0)->FlightStartTime = 0;
+                                    GameState->GetAircraft(0)->DropStartTime = 0;
                                     GameState->GetAircraft(0)->FlightInfo.TimeTillDropStart = 0;
                                     GameState->bAircraftIsLocked = false;
-                                    Aircraft->ExitLocation = RandLocation;
                                     GameState->GetAircraft(0)->FlightInfo.FlightStartLocation = FVector_NetQuantize100(RandLocation);
                                     GameState->GetAircraft(0)->FlightInfo.FlightSpeed = 0;
                                     if (bHideAndSeek)
@@ -215,20 +178,6 @@ namespace GUI
                                     if (bPlayground)
                                     {
                                         Playground().InitializePlayground(SoloPlaylist, GameState);
-                                        auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
-                                        if (bAllowStorm)
-                                        {
-                                            GameMode->bSafeZoneActive = true;
-                                            GameMode->bSafeZonePaused = false;
-                                            
-                                            
-                                        }
-
-                                        if (!bAllowStorm)
-                                        {
-                                            GameMode->bSafeZoneActive = false;
-                                            GameMode->bSafeZonePaused = true;
-                                        }
                                     }
                                 }
 
@@ -238,8 +187,6 @@ namespace GUI
                             }
 
                             ZeroGUI::Checkbox(L"Spawn bus on a random location?", &bBusOnLocations);
-
-                            ZeroGUI::Checkbox(L"Allow Storm?", &bAllowStorm);
 
                             if (!bPlayground)
                             {
@@ -253,6 +200,13 @@ namespace GUI
 
 
                         ZeroGUI::Checkbox(L"Allow players to build?", &bBuildingAllowed);
+                        
+                        ZeroGUI::Checkbox(L"Safe Zone Paused?", &((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused);
+
+                        if (ZeroGUI::Button(L"Stop Server", FVector2D {100,25}))
+                        {
+                            bRestart = true;
+                        }
 
                         break;
                     }
@@ -296,42 +250,31 @@ namespace GUI
                     if (ZeroGUI::Button(L"Start Match", { 100, 25 }))
                     {
                         bReadyToStart = true;
-                        reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode)->ReadyToStartMatch();
+                        ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->ReadyToStartMatch();
                     }
                     ZeroGUI::Text(L"Player Loadout", false, true);
                     ZeroGUI::Checkbox(L"Allow Cosmetics?", &bCosmetics);
                     ZeroGUI::Checkbox(L"Regular Loadout", &bLoadoutRegular);
                     ZeroGUI::Checkbox(L"Rockets Loadout", &bLoadoutExplosives);
                     ZeroGUI::Checkbox(L"Snipers Loadout", &bLoadoutSnipers);
-                    ZeroGUI::Checkbox(L"Random Loadout", &bLoadoutRandom);
 
                     if (bLoadoutRegular)
                     {
                         loadoutToUse = WeaponLoadout::REGULAR;
                         bLoadoutExplosives = false;
                         bLoadoutSnipers = false;
-                        bLoadoutRandom = false;
                     }
                     if (bLoadoutExplosives)
                     {
                         loadoutToUse = WeaponLoadout::EXPLOSIVES;
                         bLoadoutRegular = false;
                         bLoadoutSnipers = false;
-                        bLoadoutRandom = false;
                     }
                     if (bLoadoutSnipers)
                     {
                         loadoutToUse = WeaponLoadout::SNIPERS;
                         bLoadoutRegular = false;
                         bLoadoutExplosives = false;
-                        bLoadoutRandom = false;
-                    }
-                    if (bLoadoutRandom)
-                    {
-                        loadoutToUse = WeaponLoadout::RANDOM;
-                        bLoadoutRegular = false;
-                        bLoadoutExplosives = false;
-                        bLoadoutSnipers = false;
                     }
 
                 }

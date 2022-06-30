@@ -7,7 +7,8 @@ namespace Game
 {
     void Start()
     {
-        GetPlayerController()->SwitchLevel(L"Athena_Terrain?game=/Game/Athena/Athena_GameMode.Athena_GameMode_C");
+        GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"open athena_terrain", GetPlayerController());
+        //GetPlayerController()->SwitchLevel(L"Athena_Terrain?game=/Game/Athena/Athena_GameMode.Athena_GameMode_C");
         bTraveled = true;
     }
 
@@ -46,7 +47,7 @@ namespace Game
         GameMode->FriendlyFireType = EFriendlyFireType::Off;
 
         GameMode->StartPlay();
-
+        GameState->DefaultBattleBus = UObject::FindObject<UAthenaBattleBusItemDefinition>("AthenaBattleBusItemDefinition BBID_PurpleBus.BBID_PurpleBus");
         GameState->bReplicatedHasBegunPlay = true;
         GameState->OnRep_ReplicatedHasBegunPlay();
 

@@ -68,8 +68,7 @@ namespace UFunctionHooks
             Inventory::OnPickup((AFortPlayerControllerAthena*)((APawn*)Object)->Controller, Parameters);
             return false;
         })
-
-#ifdef CHEATS
+        /*
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerCheat", {
             if (Object->IsA(AFortPlayerControllerAthena::StaticClass()))
             {
@@ -153,8 +152,7 @@ namespace UFunctionHooks
 
             return false;
         })
-#endif
-
+        */
         DEFINE_PEHOOK("Function Engine.CheatManager.CheatScript", {
             return false;
         })
@@ -163,17 +161,15 @@ namespace UFunctionHooks
             auto PC = (AFortPlayerControllerAthena*)Object;
             auto Params = (AFortPlayerController_ServerCreateBuildingActor_Params*)Parameters;
             auto CurrentBuildClass = Params->BuildingClassData.BuildingClass;
+            auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
 
-            if (!PC->Pawn)
+            if (!Pawn)
                 return true;
-
 
             if (!bBuildingAllowed)
                 return false;
 
             static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
-
-            auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
 
             if (!Pawn->PreviousBuild)
             {
@@ -400,7 +396,6 @@ namespace UFunctionHooks
             auto Controller = (AFortPlayerControllerAthena*)Object;
             auto Pawn = (APlayerPawn_Athena_C*)Controller->Pawn;
 
-
             if (Controller && Pawn && Params->BuildingActorToRepair)
             {
                 Params->BuildingActorToRepair->RepairBuilding(Controller, 10); // TODO: Figure out how to get the repair amount
@@ -473,36 +468,24 @@ namespace UFunctionHooks
             return false;
         })
 
-        DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerAttemptInteract",
-                      {
-                          auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
-                          auto PC = (AFortPlayerControllerAthena*)Object;
+        DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerAttemptInteract", {
+            auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
+            auto PC = (AFortPlayerControllerAthena*)Object;
 
-                          if (Params->ReceivingActor)
-                          {
-                              if (Params->ReceivingActor->IsA(APlayerPawn_Athena_C::StaticClass()))
-                              {
-                                  auto DBNOPawn = (APlayerPawn_Athena_C*)Params->ReceivingActor;
-                                  auto DBNOPC = (AFortPlayerControllerAthena*)DBNOPawn->Controller;
+            if (Params->ReceivingActor)
+            {
+                auto DBNOPawn = (APlayerPawn_Athena_C*)Params->ReceivingActor;
+                auto DBNOPC = (AFortPlayerControllerAthena*)DBNOPawn->Controller;
 
-                                  if (DBNOPawn && DBNOPC)
-                                  {
-                                      DBNOPawn->ReviveFromDBNO(PC);
-                                  }
-                              }
+                if (DBNOPawn && DBNOPC && DBNOPawn->IsA(APlayerPawn_Athena_C::StaticClass()))
+                {
+                    DBNOPawn->ReviveFromDBNO(PC);
+                }
+            }
 
-                              if (Params->ReceivingActor->IsA(ABuildingContainer::StaticClass()))
-                              {
-                                  auto Container = (ABuildingContainer*)Params->ReceivingActor;
-
-                                  Container->bAlreadySearched = true;
-                                  Container->OnRep_bAlreadySearched();
-                              }
-                          }
-
-                          return false;
-                      })
-
+            return false;
+        })
+        /*
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerPlayEmoteItem", {
             if (!Object->IsA(AFortPlayerControllerAthena::StaticClass()))
                 return false;
@@ -577,7 +560,7 @@ namespace UFunctionHooks
 
             return false;
         })
-
+        */
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerAttemptInventoryDrop", {
             auto PC = (AFortPlayerControllerAthena*)Object;
 
@@ -641,7 +624,7 @@ namespace UFunctionHooks
             
                 if (Params && Pawn)
                 {
-                    if (!Params->ChosenCharacterPart)
+                    if (!Params->ChosenCharacterPart && Params->Part != EFortCustomPartType::Hat)
                         return true;
                 }
             
