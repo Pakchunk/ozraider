@@ -4,6 +4,8 @@
 #include "ufunctionhooks.h"
 
 // #define LOGGING
+#define HEALTH 100
+#define SHIELD 100
 
 namespace Hooks
 {
@@ -51,19 +53,27 @@ namespace Hooks
         Native::World::NotifyControlMessage(GetWorld(), Connection, MessageType, Bunch);
     }
 
-    auto newIndex()
+    // eliminates the chance of two players being on the same team randomly.
+    // TODO: Sort STW teams from PvP teams.
+    auto ApplyTeam()
     {
-        static int Index = GetMath()->STATIC_RandomIntegerInRange(0, 42);
-        return Index;
-    }
+        if (!hasSetup)
+        {
+            hasSetup = true;
+            for (int i = 0; i < 104; i++)
+            {
+                teamsmap.insert_or_assign((EFortTeam)i, false);
+            }
+        }
 
-    static auto ChooseRandomPickaxeIndex()
-    {
-        static int Index = Index = rand() % 43;
-        if (Index == 43)
-            Index -= 2;
+        for (auto team : teamsmap)
+        {
+            if (team.second)
+                continue;
 
-        return Index;
+            teamsmap.insert_or_assign(team.first, true);
+            return team.first;
+        }
     }
 
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
@@ -84,14 +94,12 @@ namespace Hooks
         PlayerController->OnRep_Pawn();
         PlayerController->Possess(Pawn);
 
-        constexpr static auto Health = 100;
-        const static auto Shield = 100;
-        Pawn->SetMaxHealth(Health);
-        Pawn->SetMaxShield(Shield);
+        Pawn->SetMaxHealth(HEALTH);
+        Pawn->SetMaxShield(SHIELD);
         Pawn->HealthRegenGameplayEffect = nullptr;
         Pawn->HealthRegenDelayGameplayEffect = nullptr;
 
-        PlayerController->bHasClientFinishedLoading = true; // should we do this on ServerSetClientHasFinishedLoading 
+        PlayerController->bHasClientFinishedLoading = true;
         PlayerController->bHasServerFinishedLoading = true;
         PlayerController->bHasInitiallySpawned = true;
         PlayerController->OnRep_bHasServerFinishedLoading();
@@ -100,7 +108,7 @@ namespace Hooks
         PlayerState->bHasStartedPlaying = true;
         PlayerState->OnRep_bHasStartedPlaying();
 
-        static auto FortRegisteredPlayerInfo = ((UFortGameInstance*)GetWorld()->OwningGameInstance)->RegisteredPlayers[0]; // UObject::FindObject<UFortRegisteredPlayerInfo>("FortRegisteredPlayerInfo Transient.FortEngine_0_1.FortGameInstance_0_1.FortRegisteredPlayerInfo_0_1");
+        static auto FortRegisteredPlayerInfo = ((UFortGameInstance*)GetWorld()->OwningGameInstance)->RegisteredPlayers[0];
 
         if (FortRegisteredPlayerInfo)
         {
@@ -145,7 +153,8 @@ namespace Hooks
             }
         }
 
-        static std::string PickaxePool[43] = {
+        static std::vector<std::string> PickaxePool = 
+        {
             "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_Anchor_Athena",
             "WID_Harvest_Pickaxe_ArtDeco",
@@ -173,7 +182,6 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Pizza",
             "WID_Harvest_Pickaxe_Plunger",
             "WID_Harvest_Pickaxe_PotOfGold",
-            "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_RockerPunk",
             "WID_Harvest_Pickaxe_Scavenger",
             "WID_Harvest_Pickaxe_Shark_Athena",
@@ -191,35 +199,30 @@ namespace Hooks
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
 
-        static int Index = ChooseRandomPickaxeIndex();
-        std::cout << Index << ": Pickaxe Index\n";
-
-        static UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        static auto Default = FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        static auto RandomPickaxe = FindWID(PickaxePool[rand() % PickaxePool.size()]);
+        UFortWeaponRangedItemDefinition* Pickaxe;
+        Pickaxe = bCosmetics ? RandomPickaxe : Default;
 
         switch (loadoutToUse)
         {
             case WeaponLoadout::REGULAR:
             {
-                /*
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                // EXPLANATION: For choice between default pickaxe/cosmetic pickaxes to work, the vector must not be static, so then we make the WEAPONS static and not the vector.
+
+                static auto Shotgun = FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03");
+                static auto SMG = FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03");
+                static auto Rifle = FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03");
+                static auto Sniper = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
+                static auto Consumable = FindWID("Athena_PurpleStuff");
+                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
                 {
                     Pickaxe,
-                    FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
-                    FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03"),
-                    //FindWID("WID_Pistol_Scavenger_Athena_R_Ore_T03"),
-                    FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
-                    FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03"),
-                    FindWID("Athena_PurpleStuff")
-                };
-                */
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
-                    Pickaxe,
-                    FindWID("WID_Assault_LMG_Athena_SR_Ore_T03"),
-                    FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03"),
-                    //FindWID("WID_Pistol_Scavenger_Athena_R_Ore_T03"),
-                    FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
-                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
-                    FindWID("WID_Assault_SemiAuto_Athena_R_Ore_T03")
+                    Shotgun,
+                    SMG,
+                    Rifle,
+                    Sniper,
+                    Consumable
                 };
 
                 EquipLoadout(PlayerController, FortLoadout);
@@ -227,28 +230,38 @@ namespace Hooks
             }
             case WeaponLoadout::EXPLOSIVES:
             {
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                static auto Rocket1 = FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03");
+                static auto Rocket2 = FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03");
+                static auto GrenadeLauncher = FindWID("WID_Launcher_Grenade_Athena_SR_Ore_T03");
+                static auto C4 = FindWID("Athena_C4");
+                static auto Consumable = FindWID("Athena_PurpleStuff");
+                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
                 {
                     Pickaxe,
-                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
-                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
-                    FindWID("WID_Launcher_Grenade_Athena_SR_Ore_T03"),
-                    FindWID("Athena_C4"),
-                    FindWID("Athena_PurpleStuff")
+                    Rocket1,
+                    Rocket2,
+                    GrenadeLauncher,
+                    C4,
+                    Consumable
                 };
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
             }
             case WeaponLoadout::SNIPERS:
             {
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                static auto BoltAction = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
+                static auto Automatic = FindWID("WID_Sniper_Standard_Scope_Athena_SR_Ore_T03");
+                static auto Hunting = FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03");
+                static auto Crossbow = FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03");
+                static auto Consumable = FindWID("Athena_PurpleStuff");
+                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
                 {
                     Pickaxe,
-                    FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03"),
-                    FindWID("WID_Sniper_Standard_Scope_Athena_SR_Ore_T03"),
-                    FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03"),
-                    FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03"),
-                    FindWID("Athena_PurpleStuff")
+                    BoltAction,
+                    Automatic,
+                    Hunting,
+                    Crossbow,
+                    Consumable
                 };
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
@@ -265,7 +278,7 @@ namespace Hooks
         {
             if (PlayerController->Pawn->PlayerState)
             {
-                PlayerState->TeamIndex = EFortTeam(rand() % 101);
+                PlayerState->TeamIndex = ApplyTeam(); //EFortTeam(rand() % 101);
                 PlayerState->OnRep_PlayerTeam();
             }
         }
@@ -273,9 +286,7 @@ namespace Hooks
         PlayerController->OverriddenBackpackSize = 100;
 
         if (Pawn && Pawn->AbilitySystemComponent)
-        {
             ApplyAbilities(Pawn);
-        }
 
         auto Drone = (ABP_VictoryDrone_C*)SpawnActor(ABP_VictoryDrone_C::StaticClass(), Pawn->K2_GetActorLocation());
         Drone->TriggerPlayerSpawnEffects();
@@ -285,11 +296,9 @@ namespace Hooks
 
     void Beacon_NotifyControlMessage(AOnlineBeaconHost* Beacon, UNetConnection* Connection, uint8 MessageType, int64* Bunch)
     {
-
-        if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase != EAthenaGamePhase::Warmup)
+        if (((AAthena_GameState_C*)GetWorld()->GameState)->GamePhase != EAthenaGamePhase::Warmup && !bPlayground)
         {
             KickController(Connection->PlayerController, L"Game has already started.");
-            //Connection->PlayerController
             printf("LogRaider: Player tried to join, but cannot because the game has already started.\n");
             return;
         }
@@ -382,13 +391,13 @@ namespace Hooks
         DETOUR_END
     }
 
-    UNetConnection* IAmTheOneWhoSpectates;
+    UNetConnection* SpectatorConnection;
     AFortPlayerStateAthena* ToSpectatePlayerState;
 
-    auto UpdateSpecvars(UNetConnection* TWTS, AFortPlayerStateAthena* TWSP)
+    auto UpdateSpecvars(UNetConnection* NetConnection, AFortPlayerStateAthena* PlayerState)
     {
-        IAmTheOneWhoSpectates = TWTS;
-        ToSpectatePlayerState = TWSP;
+        SpectatorConnection = NetConnection;
+        ToSpectatePlayerState = PlayerState;
     }
 
     auto GetDeathReason(FFortPlayerDeathReport DeathReport)
@@ -443,6 +452,16 @@ namespace Hooks
             }
         }
 
+        if (Function->GetName().find("Tick") != std::string::npos && bPlayground && PlayerBuilds.size() >= 600)
+        {
+            for (auto build : PlayerBuilds)
+            {
+                if (build != nullptr)
+                    build->K2_DestroyActor();
+            }
+            PlayerBuilds.clear();
+        }
+
         if (Function->GetName().find("Tick") != std::string::npos && bRestart)
         {
             bRestart = false;
@@ -454,6 +473,28 @@ namespace Hooks
             bMapFullyLoaded = false;
             bStartedBus = false;
             HostBeacon = nullptr;
+            bCosmetics = true;
+            bLoadoutRegular = true;
+            bLoadoutExplosives = false;
+            bLoadoutSnipers = false;
+            bBusOnLocations = false;
+            bBuildingAllowed = true;
+            bRespawn = false;
+            bHideAndSeek = false;
+            bPlayground = false;
+            bStormPaused = false;
+            bSafeZoneBased = false;
+            ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = false;
+            SpectatorConnection = nullptr;
+            ToSpectatePlayerState = nullptr;
+            PlayerBuilds.clear();
+            for (auto team : teamsmap)
+            {
+                if (team.second)
+                    teamsmap.insert_or_assign(team.first, false);
+                else
+                    break;
+            }
             DetachNetworkHooks();
             GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"open frontend", GetPlayerController());
         }
@@ -464,6 +505,7 @@ namespace Hooks
             auto PC = (AFortPlayerControllerAthena*)Object;
             auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
 
+            /*
             auto FortAnimInstance = static_cast<UFortAnimInstance*>(Pawn->Mesh->GetAnimInstance());
 
             if (!FortAnimInstance->bIsJumping && !FortAnimInstance->bIsFalling && !PC->bIsPlayerActivelyMoving)
@@ -474,7 +516,7 @@ namespace Hooks
                 auto EmoteAsset = static_cast<AFortPlayerController_ServerPlayEmoteItem_Params*>(Params)->EmoteAsset;
                 auto Montage = EmoteAsset->GetAnimationHardReference(EFortCustomBodyType::All, EFortCustomGender::Both);
                 
-                auto AnimInstance = (UFortAnimInstance*)Pawn->Mesh->GetAnimInstance();
+                auto AnimInstance = (UFortPlayerAnimInstance*)Pawn->Mesh->GetAnimInstance();
                 PC->PlayEmoteItem(EmoteAsset);
                 AnimInstance->Montage_Play(Montage, 1, EMontagePlayReturnType::Duration, 0, true);
                 Pawn->RepAnimMontageInfo.AnimMontage = Montage;
@@ -483,7 +525,7 @@ namespace Hooks
                 Pawn->ForceNetUpdate();
                 
             }
-            
+            */
         }
 
 
@@ -495,8 +537,8 @@ namespace Hooks
                 if (Object->IsA(ABP_VictoryDrone_C::StaticClass()))
                     drone->K2_DestroyActor();
 
-                if (IAmTheOneWhoSpectates && ToSpectatePlayerState)
-                    Spectate(IAmTheOneWhoSpectates, ToSpectatePlayerState);
+                if (SpectatorConnection && ToSpectatePlayerState)
+                    Spectate(SpectatorConnection, ToSpectatePlayerState);
             }
             else
             {
@@ -513,6 +555,44 @@ namespace Hooks
                     drone->K2_DestroyActor();
                 }
             }
+        }
+
+        if (Function->GetFullName() == "Function SafeZoneIndicator.SafeZoneIndicator_C.OnSafeZoneStateChange" && bSafeZoneBased)
+        {
+            auto Indicator = (ASafeZoneIndicator_C*)Object;
+            auto SafeZonePhase = ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase;
+            Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
+            //std::cout << "SafeZonePhase: " << SafeZonePhase << "\n";
+            switch (SafeZonePhase)
+            {
+            case 0:
+                
+                Indicator->Radius = 15000;
+                Indicator->NextRadius = 11000;
+                break;
+            case 1:
+                Indicator->NextRadius = 7000;
+                break;
+            case 2:
+                Indicator->NextRadius = 4000;
+                break;
+            case 3:
+                Indicator->NextRadius = 1000;
+                break;
+            case 4:
+                Indicator->NextRadius = 500;
+                break;
+            default:
+                Indicator->NextRadius = 50;
+                break;
+            }
+        }
+
+        if (Function->GetFullName() == "Function PlayerPawn_Athena.PlayerPawn_Athena_C.GameplayCue.Athena.OutsideSafeZone" && bSafeZoneBased)
+        {
+            // TODO: somehow find a better way to do this, or fix how the player gets damaged when the zone is created
+            if (((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase > 0)
+                ((APlayerPawn_Athena_C*)Object)->SetHealth(((APlayerPawn_Athena_C*)Object)->GetHealth() - 2);
         }
 
         if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied")
@@ -539,8 +619,21 @@ namespace Hooks
                 Drone->Owner = DeadPC;
                 Drone->OnRep_Owner();
 
+                /*
                 if (!bPlayground)
-                    GameState->PlayerArray.RemoveSingle(DeadPC->NetPlayerIndex);
+                {
+                    std::cout << DeadPC->NetPlayerIndex << "Player Index 1\n";
+                    for (int i = 0; i < GameState->PlayerArray.Num(); i++)
+                    {
+                        if (GameState->PlayerArray[i] == DeadPlayerState)
+                        {
+                            std::cout << i << "Player Index 2\n";
+                            GameState->PlayerArray.RemoveAt(i);
+                        }
+                    }
+                    //GameState->PlayerArray.RemoveSingle(DeadPC->NetIndex);
+                }
+                */
 
                 FDeathInfo deathInfo;
                 deathInfo.bDBNO = false;

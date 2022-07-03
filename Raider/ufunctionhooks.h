@@ -169,8 +169,6 @@ namespace UFunctionHooks
             if (!bBuildingAllowed)
                 return false;
 
-            static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
-
             if (!Pawn->PreviousBuild)
             {
                 std::cout << "LogRaider: Player's previous build is invalid! Creating new instance.\n";
@@ -359,6 +357,7 @@ namespace UFunctionHooks
                         NewBuildingActor->InitializeKismetSpawnedBuildingActor(NewBuildingActor, PC);
                         auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
                         NewBuildingActor->Team = PlayerState->TeamIndex;
+                        PlayerBuilds.push_back(NewBuildingActor);
                     }
                 }
             }

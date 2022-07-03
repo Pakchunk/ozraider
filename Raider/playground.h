@@ -9,9 +9,8 @@ class Playground
 public:
     void InitializePlayground(UFortPlaylistAthena* CurrentPlaylist, AAthena_GameState_C* GameState)
     {
-        static auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
-        GameMode->bSafeZoneActive = false;
-        GameMode->bSafeZonePaused = true;
+        ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZoneActive = false;
+        ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = true;
         
         auto Playlist = CurrentPlaylist;
 
@@ -48,7 +47,6 @@ public:
 
     void OnDeath(AFortPlayerPawnAthena* KillerPawn)
     {
-        return;
         if (KillerPawn && KillerPawn->GetHealth() > 0)
         {
             static int HealthToGive = 50;

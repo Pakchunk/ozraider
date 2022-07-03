@@ -7,7 +7,7 @@
     <Filter Include="UE4">
       <UniqueIdentifier>{8c651f94-04a2-4bc2-9e7c-0ce7f4df2b38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Gamemodes">
+    <Filter Include="Custom">
       <UniqueIdentifier>{c5f73af6-c34a-4378-8d27-aaab38b61deb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -69,10 +69,10 @@
     <ClInclude Include="ufunctionhooks.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="hidenseek.h">
-      <Filter>Gamemodes</Filter>
+      <Filter>Custom</Filter>
     </ClInclude>
     <ClInclude Include="playground.h">
-      <Filter>Gamemodes</Filter>
+      <Filter>Custom</Filter>
     </ClInclude>
     <ClInclude Include="framework.h" />
   </ItemGroup>

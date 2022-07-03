@@ -16,7 +16,10 @@ inline bool bListening = false;
 static bool bSpawnedFloorLoot = false;
 static bool bMapFullyLoaded = false;
 
+std::map<EFortTeam, bool> teamsmap;
+bool hasSetup = false;
 static std::unordered_set<ABuildingSMActor*> Buildings;
+std::vector<ABuildingSMActor*> PlayerBuilds;
 static AFortOnlineBeaconHost* HostBeacon = nullptr;
 AAthena_GameState_C* GameState;
 
@@ -242,9 +245,7 @@ inline void CreateConsole()
 inline auto CreateCheatManager(APlayerController* Controller)
 {
     if (!Controller->CheatManager)
-    {
         Controller->CheatManager = (UCheatManager*)GetGameplayStatics()->STATIC_SpawnObject(UFortCheatManager::StaticClass(), Controller); // lets just assume its gamemode athena
-    }
 
     return (UFortCheatManager*)Controller->CheatManager;
 }
@@ -340,6 +341,7 @@ inline void Build(AFortPlayerControllerAthena* PC, ABuildingSMActor* BuildingAct
         BuildingActor->InitializeKismetSpawnedBuildingActor(BuildingActor, PC);
         auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
         BuildingActor->Team = PlayerState->TeamIndex;
+        PlayerBuilds.push_back(BuildingActor);
     }
     else
     {

@@ -40,6 +40,8 @@ namespace Game
         {
             Playlist->bNoDBNO = true;
             Playlist->FriendlyFireType = EFriendlyFireType::On;
+            Playlist->RespawnLocation = EAthenaRespawnLocation::Air;
+            Playlist->RespawnType = EAthenaRespawnType::None;
             GameState->CurrentPlaylistData = Playlist;
             GameState->OnRep_CurrentPlaylistData();
         }

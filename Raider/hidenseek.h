@@ -36,7 +36,7 @@ public:
                 //EquipInventoryItem(PC, PickaxeEntry.ItemGuid);
             static std::vector<UFortWeaponRangedItemDefinition*> HiderLoadout = 
             {
-                (UFortWeaponRangedItemDefinition*)PC->WorldInventory->Inventory.ItemInstances[13]->ItemEntry.ItemDefinition,
+                (UFortWeaponRangedItemDefinition*)PC->WorldInventory->Inventory.ItemInstances[15]->ItemEntry.ItemDefinition,
                 nullptr,
                 nullptr,
                 nullptr,
