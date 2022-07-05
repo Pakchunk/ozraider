@@ -2,9 +2,18 @@
 
 #include "gui.h"
 #include "ufunctionhooks.h"
-
+#include "framework.h"
+#include <chrono>
+#include <thread>
+#include <map>
+#include <chrono>
+#include <random>
 // #define LOGGING
 
+
+
+#define HEALTH 100
+#define SHIELD 100
 namespace Hooks
 {
 
@@ -53,67 +62,81 @@ namespace Hooks
         Native::World::NotifyControlMessage(GetWorld(), Connection, MessageType, Bunch);
     }
 
-    auto newIndex()
-    {
-        static int Index = GetMath()->STATIC_RandomIntegerInRange(0, 42);
-        return Index;
+    auto ApplyTeam() {
+        if (!hasSetup)
+        {
+            hasSetup = true;
+            for (int i = 0; i < 104; i++)
+            {
+                teamsmap.insert_or_assign((EFortTeam)i, false);
+
+            }
+            for (auto team : teamsmap)
+            {
+                if (team.second)
+                    continue;
+                teamsmap.insert_or_assign(team.first, true);
+                return team.first;
+            }
+        }
     }
     
     
-        /* static auto Location = AssaultRifles[rand() % AssaultRifles.size()];
-        return Location;*/
     
-    
-
     auto ChooseRandomPickaxeIndex()
     {
-        int Index = Index = rand() % 43; //one more than actual number.
-        if (Index == 42)
-            Index -= 2;
+        int Index = Index = rand() % 42 + 1;
+        //if (Index == 42)
+            //Index -= 2;
 
         return Index;
     }
+
+    /* auto ChooseRandomAssaultRifle()
+    {
+        int Index2 = Index2 = rand() % 17 +1 ; // one more than actual number.
+       // if (Index2 == 17)
+           // Index2 -= 2;
+
+        return Index2;
+    }
+    auto ChooseRandomShotgun()
+    {
+        int Index3 = Index3 = rand() % 7 + 1;
+       // if (Index3 == 7)
+        //    Index3 -= 2;
+
+        return Index3;
+    }
+    auto ChooseRandomSniper()
+    {
+        int Index4 = Index4 = rand() % 18 + 1;
+       // if (Index4 == 18)
+        //    Index4 -= 2;
+
+        return Index4;
+    }
+    auto ChooseRandomFourthSlot()
+    {
+        int Index5 = Index5 = rand() % 5 + 1;
+       // if (Index5 == 5)
+        //    Index5 -= 2;
+
+        return Index5;
+    }
+    auto ChooseRandomFifthSlot()
+    {
+        int Index6 = Index6 = rand() % 4 + 1;
+      //  if (Index6 == 4)
+       //     Index6 -= 2;
+
+        return Index6;
+    }*/
+        
     
-         auto ChooseRandomAssaultRifle()
-        {
-            int Index2 = Index2 = rand() % 18; //one more than actual number.
-            if (Index2 == 17)
-                Index2 -= 2;
+    
 
-            return Index2;
-        }
-        auto ChooseRandomShotgun()
-        {
-            int Index3 = Index3 = rand() % 8;
-            if (Index3 == 7)
-                Index3 -= 2;
-
-            return Index3;
-        }
-        auto ChooseRandomSniper()
-        {
-            int Index4 = Index4 = rand() % 24;
-            if (Index4 == 23)
-                Index4 -= 2;
-
-            return Index4;
-        }
-        auto ChooseRandomFourthSlot()
-        {
-            int Index5 = Index5 = rand() % 5;
-            if (Index5 == 4)
-                Index5 -= 2;
-
-            return Index5;
-        }
-        auto ChooseRandomFifthSlot()
-        {
-            int Index6 = Index6 = rand() % 7;
-            if (Index6 == 6)
-                Index6 -= 2;
-
-            return Index6;
-        }
+    
     
 
     APlayerController* SpawnPlayActor(UWorld* World, UPlayer* NewPlayer, ENetRole RemoteRole, FURL& URL, void* UniqueId, SDK::FString& Error, uint8 NetPlayerIndex)
@@ -136,12 +159,12 @@ namespace Hooks
 
         constexpr static auto Health = 100;
         const static auto Shield = 100;
-        Pawn->SetMaxHealth(Health);
-        Pawn->SetMaxShield(Shield);
+        Pawn->SetMaxHealth(HEALTH);
+        Pawn->SetMaxShield(SHIELD);
         Pawn->HealthRegenGameplayEffect = nullptr;
         Pawn->HealthRegenDelayGameplayEffect = nullptr;
 
-        PlayerController->bHasClientFinishedLoading = true; // should we do this on ServerSetClientHasFinishedLoading 
+        PlayerController->bHasClientFinishedLoading = true; 
         PlayerController->bHasServerFinishedLoading = true;
         PlayerController->bHasInitiallySpawned = true;
         PlayerController->OnRep_bHasServerFinishedLoading();
@@ -149,6 +172,8 @@ namespace Hooks
         PlayerState->bHasFinishedLoading = true;
         PlayerState->bHasStartedPlaying = true;
         PlayerState->OnRep_bHasStartedPlaying();
+
+
 
         static auto FortRegisteredPlayerInfo = ((UFortGameInstance*)GetWorld()->OwningGameInstance)->RegisteredPlayers[0]; // UObject::FindObject<UFortRegisteredPlayerInfo>("FortRegisteredPlayerInfo Transient.FortEngine_0_1.FortGameInstance_0_1.FortRegisteredPlayerInfo_0_1");
 
@@ -194,10 +219,7 @@ namespace Hooks
                 }
             }
         }
-        
-
-        
-        std::string PickaxePool[42] = {
+        static std::vector<std::string> PickaxePool = {
             "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_Anchor_Athena",
             "WID_Harvest_Pickaxe_ArtDeco",
@@ -225,6 +247,7 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Pizza",
             "WID_Harvest_Pickaxe_Plunger",
             "WID_Harvest_Pickaxe_PotOfGold",
+            "WID_Harvest_Pickaxe_Prismatic",
             "WID_Harvest_Pickaxe_RockerPunk",
             "WID_Harvest_Pickaxe_Scavenger",
             "WID_Harvest_Pickaxe_Shark_Athena",
@@ -241,29 +264,29 @@ namespace Hooks
             "WID_Harvest_Pickaxe_Teslacoil_Athena",
             "WID_Harvest_Pickaxe_WinterCamo_Athena"
         };
-        std::string AssaultRiflePool[17] = {
-            "WID_Assault_Auto_Athena_C_Ore_T03",
-            "WID_Assault_Auto_Athena_UC_Ore_T03",
-            "WID_Assault_Auto_Athena_R_Ore_T03",
-            "WID_Assault_AutoHigh_Athena_VR_Ore_T03",
-            "WID_Assault_AutoHigh_Athena_SR_Ore_T03",
-            "WID_Assault_SemiAuto_Athena_C_Ore_T02",
-            "WID_Assault_SemiAuto_Athena_R_Ore_T03",
-            "WID_Assault_SemiAuto_Athena_UC_Ore_T03",
-            "WID_Pistol_AutoHeavy_Athena_C_Ore_T02",
-            "WID_Pistol_AutoHeavy_Athena_R_Ore_T03",
-            "WID_Pistol_AutoHeavy_Athena_UC_Ore_T03",
-            "WID_Pistol_AutoHeavySuppressed_Athena_C_Ore_T02",
-            "WID_Pistol_AutoHeavySuppressed_Athena_R_Ore_T03",
-            "WID_Pistol_AutoHeavySuppressed_Athena_UC_Ore_T03",
-            "WID_Pistol_Scavenger_Athena_R_Ore_T03",
-            "WID_Pistol_Scavenger_Athena_UC_Ore_T03",
-            "WID_Pistol_Scavenger_Athena_VR_Ore_T03"
-            
-        };
-        std::string ShotgunPool[7] = {
-            //"WID_Shotgun_BreakBarrel_Athena_SR_Ore_T03",
-            //"WID_Shotgun_BreakBarrel_Athena_VR_Ore_T03",
+        
+
+        static std::vector<std::string> AssaultRiflePool = {
+                "WID_Assault_Auto_Athena_C_Ore_T03",
+                "WID_Assault_Auto_Athena_UC_Ore_T03",
+                "WID_Assault_Auto_Athena_R_Ore_T03",
+                "WID_Assault_AutoHigh_Athena_VR_Ore_T03",
+                "WID_Assault_AutoHigh_Athena_SR_Ore_T03",
+                "WID_Assault_SemiAuto_Athena_C_Ore_T02",
+                "WID_Assault_SemiAuto_Athena_R_Ore_T03",
+                "WID_Assault_SemiAuto_Athena_UC_Ore_T03",
+                "WID_Pistol_AutoHeavy_Athena_C_Ore_T02",
+                "WID_Pistol_AutoHeavy_Athena_R_Ore_T03",
+                "WID_Pistol_AutoHeavy_Athena_UC_Ore_T03",
+                "WID_Pistol_AutoHeavySuppressed_Athena_C_Ore_T02",
+                "WID_Pistol_AutoHeavySuppressed_Athena_R_Ore_T03",
+                "WID_Pistol_AutoHeavySuppressed_Athena_UC_Ore_T03",
+                "WID_Pistol_Scavenger_Athena_R_Ore_T03",
+                "WID_Pistol_Scavenger_Athena_UC_Ore_T03",
+                "WID_Pistol_Scavenger_Athena_VR_Ore_T03"
+
+            };
+        static std::vector<std::string> ShotgunPool = {
             "WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_VR_Ore_T03",
@@ -272,7 +295,7 @@ namespace Hooks
             "WID_Shotgun_Standard_Athena_C_Ore_T03",
             "WID_Shotgun_Standard_Athena_UC_Ore_T03"
         };
-        std::string SniperPool[23] = {
+        static std::vector<std::string> SniperPool = {
             "WID_Sniper_BoltAction_Scope_Athena_R_Ore_T03",
             "WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03",
             "WID_Sniper_BoltAction_Scope_Athena_VR_Ore_T03",
@@ -285,19 +308,14 @@ namespace Hooks
             "WID_Pistol_SixShooter_Athena_C_Ore_T02",
             "WID_Pistol_SixShooter_Athena_R_Ore_T03",
             "WID_Pistol_SixShooter_Athena_UC_Ore_T03",
-            "WID_RC_Rocket_Athena_SR_T03",
-            "WID_RC_Rocket_Athena_VR_T03",
             "WID_Assault_LMG_Athena_SR_Ore_T03",
             "WID_Assault_LMG_Athena_VR_Ore_T03",
             "WID_Assault_LMGSAW_Athena_R_Ore_T03",
             "WID_Assault_LMGSAW_Athena_VR_Ore_T03",
-            "WID_Assault_AutoM4A1_Athena_VR_Ore_T04",
-            "WID_Assault_Surgical_Athena_R_Ore_T03",
-            "WID_Assault_Surgical_Athena_VR_Ore_T03",
             "WID_Pistol_HandCannon_Athena_SR_Ore_T03",
             "WID_Pistol_HandCannon_Athena_VR_Ore_T03"
         };
-        std::string FourthSlotPool[5] = {
+        static std::vector<std::string> FourthSlotPool = {
             "Athena_Bush",
             "Athena_DanceGrenade",
             "Athena_GasGrenade",
@@ -305,90 +323,152 @@ namespace Hooks
             "Athena_StickyGrenade"
 
         };
-        std::string FifthSlotPool[4] = {
+
+        static std::vector<std::string> FifthSlotPool = {
             "Athena_PurpleStuff",
             "Athena_Medkit",
-            //"Athena_Shields",
-            //"Athena_ShieldSmall",
             "Athena_Bandage",
             "Athena_SuperMedkit"
         };
 
+        /* std::vector<UFortWeaponRangedItemDefinition*> FortRLoadout1 = {
+            Pickaxe,
+            FindWID("WID_Assault_AutoHigh_Athena_VR_Ore_T03"),
+            FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
+            FindWID("WID_Pistol_HandCannon_Athena_VR_Ore_T03"),
+            FindWID("Athena_Bush"),
+            FindWID("Athena_Bandage")
+        };
+        EquipLoadout(PlayerController, FortRLoadout1);
+        std::vector<UFortWeaponRangedItemDefinition*> FortRLoadout2 = {
+            Pickaxe,
+            FindWID("WID_Pistol_Scavenger_Athena_UC_Ore_T03"),
+            FindWID("WID_Shotgun_SlugFire_Athena_SR"),
+            FindWID("WID_Assault_Auto_Athena_R_Ore_T03"),
+            FindWID("Athena_DanceGrenade"),
+            FindWID("Athena_PurpleStuff")
+        };
+        EquipLoadout(PlayerController, FortRLoadout2);
+        std::vector<UFortWeaponRangedItemDefinition*> FortRLoadout3 = {
+            Pickaxe,
+            FindWID("WID_Pistol_AutoHeavySuppressed_Athena_R_Ore_T03"),
+            FindWID("WID_Shotgun_SemiAuto_Athena_VR_Ore_T03"),
+            FindWID("WID_Assault_SemiAuto_Athena_R_Ore_T03"),
+            FindWID("Athena_GasGrenade"),
+            FindWID("Athena_SuperMedkit")
+        };
+        EquipLoadout(PlayerController, FortRLoadout3);
+        std::vector<UFortWeaponRangedItemDefinition*> FortRLoadout3 = {
+            Pickaxe,
+            FindWID("WID_Assault_Auto_Athena_UC_Ore_T03"),
+            FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
+            FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03"),
+            FindWID("Athena_KnockGrenade"),
+            FindWID("Athena_Medkit")
+        };
+        EquipLoadout(PlayerController, FortRLoadout3);*/
+        
 
 
-         int Index = ChooseRandomPickaxeIndex();
-        std::cout << Index << ": Pickaxe Index\n";
 
-        int Index2 = ChooseRandomAssaultRifle();
-        std::cout << Index2 << ": Assault Rifle Index\n";
 
-        int Index3 = ChooseRandomShotgun();
-        std::cout << Index3 << ": Shotgun Index\n";
+         static auto Default = FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        auto RandomPickaxe = FindWID(PickaxePool[rand() % PickaxePool.size()]); //making every player have a unique random pickaxe
+        UFortWeaponRangedItemDefinition* Pickaxe;
+        Pickaxe = bCosmetics ? RandomPickaxe : Default;
 
-        int Index4 = ChooseRandomSniper();
-        std::cout << Index4 << ": Sniper Index\n";
+        auto RandomAssaultRifle = FindWID(AssaultRiflePool[rand() % AssaultRiflePool.size()]); //making every player have a unique random AR
+        UFortWeaponRangedItemDefinition* AssaultRifle;
+        AssaultRifle = RandomAssaultRifle;
 
-        int Index5 = ChooseRandomFourthSlot();
-        std::cout << Index5 << ": Fourth Slot Index\n";
+        auto RandomShotgun = FindWID(ShotgunPool[rand() % ShotgunPool.size()]); //making every player have a unique random Shotgun
+        UFortWeaponRangedItemDefinition* Shotgun;
+        Shotgun = RandomShotgun;
 
-        int Index6 = ChooseRandomFifthSlot();
-        std::cout << Index6 << ": Fifth Slot Index\n";
+        auto RandomSniper = FindWID(SniperPool[rand() % SniperPool.size()]); //making every player have a unique random Sniper
+        UFortWeaponRangedItemDefinition* Sniper;
+        Sniper = RandomSniper;
+
+        auto RandomFourthSlot = FindWID(FourthSlotPool[rand() % FourthSlotPool.size()]); //making every player have a unique random FourthSlot
+        UFortWeaponRangedItemDefinition* FourthSlot;
+        FourthSlot = RandomFourthSlot;
+
+        auto RandomFifthSlot = FindWID(FifthSlotPool[rand() % FifthSlotPool.size()]); //making every player have a unique random FifthSlot
+        UFortWeaponRangedItemDefinition* FifthSlot;
+        FifthSlot = RandomFifthSlot;
 
         
 
         
 
+        //UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
+        /* UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2]);
+        UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3]);
+        UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4]);
+        UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5]);
+        UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6]);*/
+
+
+        
         
 
-        UFortWeaponRangedItemDefinition* Pickaxe = bCosmetics ? FindWID(PickaxePool[Index + 1]) : FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
-        UFortWeaponRangedItemDefinition* RAssaultRifle = FindWID(AssaultRiflePool[Index2 + 1]);
-        UFortWeaponRangedItemDefinition* RShotgun = FindWID(ShotgunPool[Index3 + 1]);
-        UFortWeaponRangedItemDefinition* RSniper = FindWID(SniperPool[Index4 + 1]);
-        UFortWeaponRangedItemDefinition* RFourSlot = FindWID(FourthSlotPool[Index5 + 1]);
-        UFortWeaponRangedItemDefinition* RFiveSlot = FindWID(FifthSlotPool[Index6 + 1]);
-        
+
+         
 
         switch (loadoutToUse)
         {
             case WeaponLoadout::REGULAR:
             {
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
-                {
+                static auto Shotgun = FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03");
+                static auto SMG = FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03");
+                static auto Rifle = FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03");
+                static auto Sniper = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
+                static auto Consumable = FindWID("Athena_PurpleStuff");
+                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
                     Pickaxe,
-                    FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03"),
-                    FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03"),
-                    //FindWID("WID_Pistol_Scavenger_Athena_R_Ore_T03"),
-                    FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03"),
-                    FindWID("Athena_KnockGrenade"),
-                    FindWID("Athena_PurpleStuff")
+                    SMG,
+                    Shotgun,
+                    Rifle,
+                    Sniper,
+                    Consumable
                 };
+                
                 EquipLoadout(PlayerController, FortLoadout);
+                //EquipLoadout(PlayerController, FortGliderLoadout);
                 break;
             }
             case WeaponLoadout::EXPLOSIVES:
             {
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
-                {
+                static auto Rocket1 = FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03");
+                static auto Rocket2 = FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03");
+                static auto GrenadeLauncher = FindWID("WID_Launcher_Grenade_Athena_SR_Ore_T03");
+                static auto C4 = FindWID("Athena_C4");
+                static auto Consumable = FindWID("Athena_PurpleStuff");
+                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
                     Pickaxe,
-                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
-                    FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03"),
-                    FindWID("WID_Launcher_Grenade_Athena_SR_Ore_T03"),
-                    FindWID("Athena_C4"),
-                    FindWID("Athena_PurpleStuff")
+                    Rocket1,
+                    Rocket2,
+                    GrenadeLauncher,
+                    C4,
+                    Consumable
                 };
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
             }
             case WeaponLoadout::SNIPERS:
             {
-                static std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
-                {
+                static auto BoltAction = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
+                static auto Automatic = FindWID("WID_Sniper_Standard_Scope_Athena_SR_Ore_T03");
+                static auto Hunting = FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03");
+                static auto Crossbow = FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03");
+                static auto Consumable = FindWID("Athena_PurpleStuff");
+                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
                     Pickaxe,
-                    FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03"),
-                    FindWID("WID_Sniper_Standard_Scope_Athena_SR_Ore_T03"),
-                    FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03"),
-                    FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03"),
-                    FindWID("Athena_PurpleStuff")
+                    BoltAction,
+                    Automatic,
+                    Hunting,
+                    Crossbow,
+                    Consumable
                 };
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
@@ -397,16 +477,20 @@ namespace Hooks
             {
                 std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = {
                     Pickaxe,
-                    RAssaultRifle,
-                    RShotgun,
-                    RSniper,
-                    RFourSlot,
-                    RFiveSlot,
+                    AssaultRifle,
+                    Shotgun,
+                    Sniper,
+                    FourthSlot,
+                    FifthSlot
                 };
                 EquipLoadout(PlayerController, FortLoadout);
                 break;
             }
         }
+            
+
+
+            
 
         auto CheatManager = CreateCheatManager(PlayerController);
         CheatManager->ToggleInfiniteAmmo();
@@ -419,7 +503,7 @@ namespace Hooks
         {
             if (PlayerController->Pawn->PlayerState)
             {
-                PlayerState->TeamIndex = EFortTeam(rand() % 101);
+                PlayerState->TeamIndex = ApplyTeam(); //EFortTeam(rand() % 101);
                 PlayerState->OnRep_PlayerTeam();
             }
         }
@@ -440,10 +524,9 @@ namespace Hooks
     void Beacon_NotifyControlMessage(AOnlineBeaconHost* Beacon, UNetConnection* Connection, uint8 MessageType, int64* Bunch)
     {
 
-        if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase != EAthenaGamePhase::Warmup)
+        if (((AAthena_GameState_C*)GetWorld()->GameState)->GamePhase != EAthenaGamePhase::Warmup && !bPlayground)
         {
             KickController(Connection->PlayerController, L"Game has already started.");
-            //Connection->PlayerController
             printf("LogRaider: Player tried to join, but cannot because the game has already started.\n");
             return;
         }
@@ -522,13 +605,13 @@ namespace Hooks
         DETOUR_END
     }
 
-    UNetConnection* IAmTheOneWhoSpectates;
+    UNetConnection* SpectatorConnection;
     AFortPlayerStateAthena* ToSpectatePlayerState;
 
-    auto UpdateSpecvars(UNetConnection* TWTS, AFortPlayerStateAthena* TWSP)
+    auto UpdateSpecvars(UNetConnection* NetConnection, AFortPlayerStateAthena* PlayerState)
     {
-        IAmTheOneWhoSpectates = TWTS;
-        ToSpectatePlayerState = TWSP;
+        SpectatorConnection = NetConnection;
+        ToSpectatePlayerState = PlayerState;
     }
 
     void ProcessEventHook(UObject* Object, UFunction* Function, void* Parameters)
@@ -549,6 +632,20 @@ namespace Hooks
             }
         }
 
+
+        if (Function->GetName().find("Tick") != std::string::npos && bPlayground && PlayerBuilds.size() >= 600)
+        {
+            for (auto build : PlayerBuilds)
+            {
+                if (build != nullptr)
+                    build->K2_DestroyActor();
+            }
+            PlayerBuilds.clear();
+        }
+
+        
+
+
         if (Function->GetFullName() == "Function BP_VictoryDrone.BP_VictoryDrone_C.OnSpawnOutAnimEnded")
         {
             if (!bPlayground)
@@ -557,8 +654,8 @@ namespace Hooks
                 if (Object->IsA(ABP_VictoryDrone_C::StaticClass()))
                     drone->K2_DestroyActor();
 
-                if (IAmTheOneWhoSpectates && ToSpectatePlayerState)
-                    Spectate(IAmTheOneWhoSpectates, ToSpectatePlayerState);
+                if (SpectatorConnection && ToSpectatePlayerState)
+                    Spectate(SpectatorConnection, ToSpectatePlayerState);
             }
             else
             {
@@ -576,35 +673,109 @@ namespace Hooks
                 }
             }
         }
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerAttemptInteract")
+        
+
+
+        
+
+        
+
+
+        if (Function->GetFullName() == "Function SafeZoneIndicator.SafeZoneIndicator_C.OnSafeZoneStateChange" && bSafeZoneBased && !bPlayground)
         {
-            auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
-            auto PC = (AFortPlayerControllerAthena*)Object;
-
-            if (Params->ReceivingActor)
+            auto Indicator = (ASafeZoneIndicator_C*)Object;
+            auto SafeZonePhase = ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase;
+            static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
+            
+            
+            
+            //std::cout << "SafeZonePhase: " << SafeZonePhase << "\n";
+             
+            switch (SafeZonePhase)
             {
-                if (Params->ReceivingActor->IsA(APlayerPawn_Athena_C::StaticClass()))
-                {
-                    auto DBNOPawn = (APlayerPawn_Athena_C*)Params->ReceivingActor;
-                    auto DBNOPC = (AFortPlayerControllerAthena*)DBNOPawn->Controller;
-
-                    if (DBNOPawn && DBNOPC)
-                    {
-                        DBNOPawn->ReviveFromDBNO(PC);
-                    }
-                }
-
-                if (Params->ReceivingActor->IsA(ABuildingContainer::StaticClass()))
-                {
-                    auto Container = (ABuildingContainer*)Params->ReceivingActor;
-
-                    Container->bAlreadySearched = true;
-                    Container->OnRep_bAlreadySearched();
-
-                    
-                }
+            case 0:
+                Indicator->Radius = 15000;
+                Indicator->NextRadius = 1500;
+                Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
+                break;
+            case 1:
+                Indicator->NextRadius = 1500;
+                Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
+                break;
+            case 2:
+                Indicator->NextRadius = 0;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+            default:
+                //Indicator->NextRadius = 5;
+                break;
             }
         }
+        if (Function->GetFullName() == "Function SafeZoneIndicator.SafeZoneIndicator_C.OnSafeZoneStateChange" && bSafeZoneBased && bPlayground)
+        {
+            auto Indicator = (ASafeZoneIndicator_C*)Object;
+            auto SafeZonePhase = ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase;
+
+            
+            Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
+            //std::cout << "SafeZonePhase: " << SafeZonePhase << "\n";
+
+            switch (SafeZonePhase)
+            {
+            case 0:
+                Indicator->Radius = 110000;
+                Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
+                Indicator->NextRadius = 110000;
+                break;
+            case 1:
+                Indicator->NextRadius = 96000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 2:
+                Indicator->NextRadius = 86000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 3:
+                Indicator->NextRadius = 55000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 4:
+                Indicator->NextRadius = 35000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 5:
+                Indicator->NextRadius = 12000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 6:
+                Indicator->NextRadius = 10000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 7:
+                Indicator->NextRadius = 10000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 8:
+                Indicator->NextRadius = 10000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            case 9:
+                Indicator->NextRadius = 10000;
+                Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
+            default:
+                Indicator->LastRadius = 100000;
+                Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
+                break;
+            }
+        }
+
+        if (Function->GetFullName() == "Function PlayerPawn_Athena.PlayerPawn_Athena_C.GameplayCue.Athena.OutsideSafeZone" && bSafeZoneBased)
+        {
+            // TODO: somehow find a better way to do this, or fix how the player gets damaged when the zone is created
+            if (((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase > 0)
+                ((APlayerPawn_Athena_C*)Object)->SetHealth(((APlayerPawn_Athena_C*)Object)->GetHealth() - 1);
+        }
+        
                           
                       
         
@@ -617,6 +788,7 @@ namespace Hooks
 
             if (DeadPC && Params)
             {
+                
                 //TArray<AActor*> Pawns;
                 //static auto GameplayStatics = (UGameplayStatics*)UGameplayStatics::StaticClass()->CreateDefaultObject();
                 //GameplayStatics->STATIC_GetAllActorsOfClass(GetWorld(), APlayerPawn_Athena_C::StaticClass(), &Pawns);
@@ -636,14 +808,28 @@ namespace Hooks
                 Drone->Owner = DeadPC;
                 Drone->OnRep_Owner();
 
+               /*
                 if (!bPlayground)
-                    GameState->PlayerArray.RemoveSingle(DeadPC->NetPlayerIndex);
+                    //GameState->PlayerArray.RemoveSingle(DeadPC->NetPlayerIndex);
+                {
+                    std::cout << DeadPC->NetPlayerIndex << "Player Index 1\n";
+                    for (int i = 0; i < GameState->PlayerArray.Num(); i++)
+                    {
+                        if (GameState->PlayerArray[i] == DeadPlayerState)
+                        {
+                            std::cout << i << "Player Index 2\n";
+                            GameState->PlayerArray.RemoveAt(i);
+                        }
+                    }
+                    //GameState->PlayerArray.RemoveSingle(DeadPC->NetIndex);
+                }
+                */
 
                 FDeathInfo deathInfo;
                 deathInfo.bDBNO = false;
                 deathInfo.DeathLocation = DeadPawnLocation;
                 deathInfo.Distance = Params->DeathReport.KillerPawn ? Params->DeathReport.KillerPawn->GetDistanceTo(DeadPC->Pawn) : 0;
-                deathInfo.DeathCause = KillerPlayerState ? EDeathCause::Banhammer : EDeathCause::FallDamage; // TODO: Determine what the actual death cause was.
+                deathInfo.DeathCause = Game::GetDeathCause(Params->DeathReport); // Death cause fix
                 deathInfo.FinisherOrDowner = KillerPlayerState ? KillerPlayerState : DeadPlayerState;
                 DeadPlayerState->DeathInfo = deathInfo;
                 DeadPlayerState->OnRep_DeathInfo();
@@ -659,7 +845,7 @@ namespace Hooks
                 }
                 else
                 {
-                    deathInfo.DeathCause = EDeathCause::FallDamage;
+                    deathInfo.DeathCause = EDeathCause::Banhammer;
                     deathInfo.FinisherOrDowner = DeadPlayerState;
                     DeadPlayerState->ClientReportKill(DeadPlayerState);
                     if (GameState->PlayersLeft > 0 && !bPlayground)
@@ -673,11 +859,8 @@ namespace Hooks
                         //Spectate(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
                     }
                 }
-                auto DeadPawn = (AFortPlayerPawnAthena*)DeadPC->Pawn;
-                if (DeadPawn->IsSkydiving() && IsKiller && bPlayground)
-                {
-                    static_cast<AFortPlayerControllerAthena*>(KillerPawn->Controller)->ClientOnPawnDied(Params->DeathReport);
-                }
+                if (bPlayground && ((AFortPlayerPawnAthena*)DeadPC->Pawn)->IsSkydiving() && IsKiller && KillerPlayerState != DeadPC->PlayerState)
+                    ((AFortPlayerControllerAthena*)KillerPawn->Controller)->ClientOnPawnDied(Params->DeathReport);
 
                 if (DeadPC->Pawn)
                     DeadPC->Pawn->K2_DestroyActor();

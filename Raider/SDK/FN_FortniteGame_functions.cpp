@@ -19281,7 +19281,6 @@ void AFortPawn::SetHealth(float NewHealthVal)
 	fn->FunctionFlags = flags;
 }
 
-
 // Function FortniteGame.FortPawn.SetFNameBasedOnHitDirection
 // (Final, Native, Public, HasOutParms, HasDefaults, BlueprintCallable)
 // Parameters:

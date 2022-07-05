@@ -30,6 +30,28 @@ void UOnlineBlueprintCallProxyBase::Activate()
 }
 
 
+
+//Random Integer
+
+int UKismetMathLibrary::RandomInteger(int Max)
+{
+    static auto fn = UObject::FindObject<UFunction>("Function Engine.KismetMathLibrary.RandomInteger");
+
+    UKismetMathLibrary_RandomInteger_Params params;
+    params.Max = Max;
+
+    auto flags = fn->FunctionFlags;
+    fn->FunctionFlags |= 0x400;
+
+    static auto defaultObj = (UObject*)StaticClass();
+    defaultObj->ProcessEvent(fn, &params);
+
+    fn->FunctionFlags = flags;
+
+    return params.ReturnValue;
+}
+
+
 // Function Engine.BlueprintAsyncActionBase.Activate
 // (Native, Public, BlueprintCallable)
 

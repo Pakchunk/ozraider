@@ -5,6 +5,16 @@
 #include "game.h"
 #include "replication.h"
 #include "ue4.h"
+#include "framework.h"
+
+
+#include "patterns.h"
+#include <chrono>
+#include <thread>
+#include <map>
+#include <chrono>
+#include <random>
+#include <xtree>
 
 // #define LOGGING
 //#define CHEATS
@@ -12,6 +22,46 @@
 
 //Define the hook with ufunction full name
 //Return true in the lambda to prevent the original function call
+
+namespace Utils
+{
+    bool GuidComp(FGuid guidA, FGuid guidB)
+    {
+        if (guidA.A == guidB.A && guidA.B == guidB.B && guidA.C == guidB.C && guidA.D == guidB.D)
+            return true;
+        else
+            return false;
+    }
+
+    std::string ActorRoletoString(ENetRole Role)
+    {
+        switch (Role)
+        {
+        case ENetRole::ROLE_Authority:
+        {
+            return "Authority";
+        }
+        case ENetRole::ROLE_AutonomousProxy:
+        {
+            return "AutonomousProxy";
+        }
+        case ENetRole::ROLE_SimulatedProxy:
+        {
+            return "SimulatedProxy";
+        }
+        }
+    }
+
+    template <typename T>
+    static T* FindObjectFast(std::string ObjectName, UClass* ObjectClass = UObject::StaticClass())
+    {
+        auto OrigInName = std::wstring(ObjectName.begin(), ObjectName.end()).c_str();
+
+        static auto StaticFindObjectAddr = Patterns::FindStuffThingy;
+        auto StaticFindObject = (T * (*)(UClass*, UObject * Package, const wchar_t* OrigInName, bool ExactClass))(StaticFindObjectAddr);
+        return StaticFindObject(ObjectClass, nullptr, OrigInName, false);
+    }
+}
 
 namespace UFunctionHooks
 {
@@ -33,6 +83,9 @@ namespace UFunctionHooks
         IAmTheOneWhoSpectates = TWTS;
         ToSpectatePlayerState = TWSP;
     }
+
+    
+    
 
 
     auto Initialize()
@@ -244,131 +297,124 @@ namespace UFunctionHooks
         })
 
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerEditBuildingActor",
-        {
-            auto Params = (AFortPlayerController_ServerEditBuildingActor_Params*)Parameters;
-            auto PC = (AFortPlayerControllerAthena*)Object;
+                      {
+                          auto Params = (AFortPlayerController_ServerEditBuildingActor_Params*)Parameters;
+                          auto PC = (AFortPlayerControllerAthena*)Object;
 
-            if (!PC->Pawn)
-                return true;
+                          if (PC && Params)
+                          {
+                              auto BuildingActor = Params->BuildingActorToEdit;
+                              auto NewBuildingClass = Params->NewBuildingClass;
+                              auto RotationIterations = Params->RotationIterations;
 
-            if (PC && Params)
-            {
-                auto BuildingActor = Params->BuildingActorToEdit;
-                auto NewBuildingClass = Params->NewBuildingClass;
-                auto RotationIterations = Params->RotationIterations;
+                              if (BuildingActor && NewBuildingClass)
+                              {
+                                  auto location = BuildingActor->K2_GetActorLocation();
+                                  auto rotation = BuildingActor->K2_GetActorRotation();
 
-                if (BuildingActor && NewBuildingClass)
-                {
-                    auto location = BuildingActor->K2_GetActorLocation();
-                    auto rotation = BuildingActor->K2_GetActorRotation();
+                                  int yaw = (int(rotation.Yaw) + 360) % 360; // Gets the rotation ranging from 0 to 360 degrees
 
-                    int yaw = (int(rotation.Yaw) + 360) % 360; // Gets the rotation ranging from 0 to 360 degrees
+                                  if (BuildingActor->BuildingType != EFortBuildingType::Wall) // Centers building pieces if necessary
+                                  {
+                                      switch (yaw)
+                                      {
+                                      case 89:
+                                      case 90:
+                                      case 91: // Sometimes the rotation may differ by 1
+                                          switch (RotationIterations)
+                                          {
+                                          case 1:
+                                              location.X += -256;
+                                              location.Y += 256;
+                                              break;
+                                          case 2:
+                                              location.X += -512;
+                                              break;
+                                          case 3:
+                                              location.X += -256;
+                                              location.Y += -256;
+                                          }
+                                          yaw = 90;
+                                          break;
+                                      case 179:
+                                      case 180:
+                                      case 181:
+                                          switch (RotationIterations)
+                                          {
+                                          case 1:
+                                              location.X += -256;
+                                              location.Y += -256;
+                                              break;
+                                          case 2:
+                                              location.Y += -512;
+                                              break;
+                                          case 3:
+                                              location.X += 256;
+                                              location.Y += -256;
+                                          }
+                                          yaw = 180;
+                                          break;
+                                      case 269:
+                                      case 270:
+                                      case 271:
+                                          switch (RotationIterations)
+                                          {
+                                          case 1:
+                                              location.X += 256;
+                                              location.Y += -256;
+                                              break;
+                                          case 2:
+                                              location.X += 512;
+                                              break;
+                                          case 3:
+                                              location.X += 256;
+                                              location.Y += 256;
+                                          }
+                                          yaw = 270;
+                                          break;
+                                      default: // 0, 360. etc.
+                                          switch (RotationIterations)
+                                          {
+                                          case 1:
+                                              location.X += 256;
+                                              location.Y += 256;
+                                              break;
+                                          case 2:
+                                              location.Y += 512;
+                                              break;
+                                          case 3:
+                                              location.X += -256;
+                                              location.Y += 256;
+                                          }
+                                          yaw = 0;
+                                      }
+                                  }
 
-                    if (BuildingActor->BuildingType != EFortBuildingType::Wall) // Centers building pieces if necessary
-                    {
-                        switch (yaw)
-                        {
-                        case 89:
-                        case 90:
-                        case 91: // Sometimes the rotation may differ by 1
-                            switch (RotationIterations)
-                            {
-                            case 1:
-                                location.X += -256;
-                                location.Y += 256;
-                                break;
-                            case 2:
-                                location.X += -512;
-                                location.Y += 0;
-                                break;
-                            case 3:
-                                location.X += -256;
-                                location.Y += -256;
-                                break;
-                            }
-                            yaw = 90;
-                            break;
-                        case 179:
-                        case 180:
-                        case 181:
-                            switch (RotationIterations)
-                            {
-                            case 1:
-                                location.X += -256;
-                                location.Y += -256;
-                                break;
-                            case 2:
-                                location.X += 0;
-                                location.Y += -512;
-                                break;
-                            case 3:
-                                location.X += 256;
-                                location.Y += -256;
-                                break;
-                            }
-                            yaw = 180;
-                            break;
-                        case 269:
-                        case 270:
-                        case 271:
-                            switch (RotationIterations)
-                            {
-                            case 1:
-                                location.X += 256;
-                                location.Y += -256;
-                                break;
-                            case 2:
-                                location.X += 512;
-                                location.Y += 0;
-                                break;
-                            case 3:
-                                location.X += 256;
-                                location.Y += 256;
-                                break;
-                            }
-                            yaw = 270;
-                            break;
-                        default: // 0, 360. etc.
-                            switch (RotationIterations)
-                            {
-                            case 1:
-                                location.X += 256;
-                                location.Y += 256;
-                                break;
-                            case 2:
-                                location.X += 0;
-                                location.Y += 512;
-                                break;
-                            case 3:
-                                location.X += -256;
-                                location.Y += 256;
-                                break;
-                            }
-                            yaw = 0;
-                        }
-                    }
+                                  rotation.Yaw = yaw + 90 * RotationIterations;
 
-                    rotation.Yaw = yaw + 90 * RotationIterations;
+                                  auto HealthPercent = BuildingActor->GetHealthPercent();
 
-                    auto HealthPercent = BuildingActor->GetHealthPercent();
+                                  //  BuildingActor->K2_DestroyActor();
+                                  BuildingActor->SilentDie();
 
-                    //  BuildingActor->K2_DestroyActor();
-                    BuildingActor->SilentDie();
+                                  if (auto NewBuildingActor = (ABuildingSMActor*)SpawnActor(NewBuildingClass, location, rotation, PC))
+                                  {
+                                      if (!BuildingActor->bIsInitiallyBuilding)
+                                          NewBuildingActor->ForceBuildingHealth(NewBuildingActor->GetMaxHealth() * HealthPercent);
+                                      NewBuildingActor->SetMirrored(Params->bMirrored);
+                                      NewBuildingActor->InitializeKismetSpawnedBuildingActor(NewBuildingActor, PC);
+                                      auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
+                                      NewBuildingActor->Team = PlayerState->TeamIndex;
+                                      PlayerBuilds.push_back(NewBuildingActor);
 
-                    if (auto NewBuildingActor = (ABuildingSMActor*)SpawnActor(NewBuildingClass, location, rotation, PC))
-                    {
-                        if (!BuildingActor->bIsInitiallyBuilding)
-                            NewBuildingActor->ForceBuildingHealth(NewBuildingActor->GetMaxHealth() * HealthPercent);
-                        NewBuildingActor->SetMirrored(Params->bMirrored);
-                        NewBuildingActor->InitializeKismetSpawnedBuildingActor(NewBuildingActor, PC);
-                        auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
-                        NewBuildingActor->Team = PlayerState->TeamIndex;
-                    }
-                }
-            }
+                                      if (!NewBuildingActor->IsStructurallySupported())
+                                          NewBuildingActor->K2_DestroyActor();
+                                  }
+                              }
+                          }
 
-            return false;
-        })
+                          return false;
+                      })
 
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerEndEditingBuildingActor", {
             auto Params = (AFortPlayerController_ServerEndEditingBuildingActor_Params*)Parameters;
@@ -413,6 +459,9 @@ namespace UFunctionHooks
             auto Params = (AFortPlayerControllerAthena_ServerAttemptAircraftJump_Params*)Parameters;
             auto PC = (AFortPlayerControllerAthena*)Object;
             auto GameState = (AAthena_GameState_C*)GetWorld()->AuthorityGameMode->GameState;
+            
+            //GameState->SafeZonesStartTime = 0.0f;
+
 
             if (PC && Params && !PC->Pawn && PC->IsInAircraft())
             {
@@ -477,7 +526,44 @@ namespace UFunctionHooks
                       {
                           auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
                           auto PC = (AFortPlayerControllerAthena*)Object;
+                          auto ReceivingActor = Params->ReceivingActor;
+                         
+                          /* if (ReceivingActor && ReceivingActor->Class->GetName().contains("Tiered_Short_Ammo"))
+                          {
+                              auto Ammo = (ABuildingContainer*)ReceivingActor;
+                              Ammo->bAlreadySearched = true;
+                              Ammo->OnRep_bAlreadySearched();
 
+                              auto Location = ReceivingActor->K2_GetActorLocation();
+
+                              for (int i = 0; i < 2; i++)
+                              {
+                                  SpawnPickup(Location, GetRandomAmmoItemDefinition());
+                              }
+                          } *///ReceivingActor && ReceivingActor->Class->GetName().contains("Tiered_Chest"))
+                          /* if (ReceivingActor && ReceivingActor->IsA(ABuildingContainer::StaticClass()))
+                          {
+                              auto CurrentPC = (AFortPlayerControllerAthena*)Object;
+                              auto CurrentPawn = (APlayerPawn_Athena_C*)CurrentPC->Pawn;
+                              auto Chest = (ABuildingContainer*)ReceivingActor;
+                              Chest->bAlreadySearched = true;
+                              Chest->OnRep_bAlreadySearched();
+
+                              auto Location = ReceivingActor->K2_GetActorLocation();
+
+                              auto WeaponDef = GetRandomItemDefinition();
+                              //auto Pickup = SpawnPickup(Location, WeaponDef);
+
+                              SummonPickup(CurrentPawn, GetRandomAmmoItemDefinition(), 10, Location);
+                              SummonPickup(CurrentPawn, ((UFortWeaponItemDefinition*)WeaponDef)->GetAmmoWorldItemDefinition_BP(), 1, Location);
+                              SummonPickup(CurrentPawn, GetRandomResourceItemDefinition(), 30, Location);
+                              
+
+
+                              
+
+                              return NULL; //AthenaSupplyDrop
+                          }*/
                           if (Params->ReceivingActor)
                           {
                               if (Params->ReceivingActor->IsA(APlayerPawn_Athena_C::StaticClass()))
@@ -491,13 +577,14 @@ namespace UFunctionHooks
                                   }
                               }
 
-                              if (Params->ReceivingActor->IsA(ABuildingContainer::StaticClass()))
+                               if (Params->ReceivingActor->IsA(ABuildingContainer::StaticClass()))
                               {
                                   auto Container = (ABuildingContainer*)Params->ReceivingActor;
 
                                   Container->bAlreadySearched = true;
                                   Container->OnRep_bAlreadySearched();
                               }
+                              
                           }
 
                           return false;
@@ -507,7 +594,9 @@ namespace UFunctionHooks
             if (!Object->IsA(AFortPlayerControllerAthena::StaticClass()))
                 return false;
 
-            auto CurrentPC = (AFortPlayerControllerAthena*)Object;
+           
+
+             auto CurrentPC = (AFortPlayerControllerAthena*)Object;
             auto CurrentPawn = (APlayerPawn_Athena_C*)CurrentPC->Pawn;
 
             auto EmoteParams = (AFortPlayerController_ServerPlayEmoteItem_Params*)Parameters;
@@ -629,6 +718,8 @@ namespace UFunctionHooks
             if (bFound)
                 EquipInventoryItem(PC, PickaxeEntry.ItemGuid);
 
+           
+
             return false;
         })
 
@@ -687,9 +778,16 @@ namespace UFunctionHooks
             }
 
             return false;
-        })
+                      })
+
+        
 
         DEFINE_PEHOOK("Function FortniteGame.FortGameModeAthena.OnAircraftExitedDropZone", {
+            auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
+            
+            
+            
+            
 
 			if (GetWorld() && GetWorld()->NetDriver && GetWorld()->NetDriver->ClientConnections.Data)
             {

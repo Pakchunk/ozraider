@@ -42,6 +42,7 @@ public:
 };
 
 
+
 // Class EngineSettings.GameMapsSettings
 // 0x00E0 (0x0108 - 0x0028)
 class UGameMapsSettings : public UObject

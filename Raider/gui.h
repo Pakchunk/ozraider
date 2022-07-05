@@ -6,7 +6,7 @@
 #include "hidenseek.h"
 #include "playground.h"
 
-static bool bStartedBus = false;
+bool bStartedBus = false;
 
 // GUI VARIABLES
 // game
@@ -24,9 +24,24 @@ bool bLoadoutSnipers = false;
 bool bLoadoutRandom = false;
 bool bAllowStorm = true;
 
+bool bSafeZoneBased = false;
+
+
+FVector BusLocation;
+FVector CenterMagic;
+FVector CenterMagic2;
+FVector CenterMagic3;
+FVector CenterMagic4;
+
+UObject* Object;
+
+
+
 AAthena_GameState_C* GameState;
 AFortPlayerStateAthena* Seeker;
 static UFortPlaylistAthena* SoloPlaylist;
+
+
 
 
 enum class WeaponLoadout
@@ -78,8 +93,108 @@ namespace GUI
     {
         static std::vector<FVector> Locations = {
 
+            { 24426, 37710, 40000 }, // retail row
+            { 50018, 73844, 40000 }, // lonely lodge
+            { 39781, 61621, 40000 }, // Moisty Mire
+            { 39781, 61621, 40000 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 40000 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 40000 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 40000 }, // Moisty Mire DUPLICATE
+            { -26479, 41847, 20000 }, // Prison
+            { -26479, 41847, 20000 }, // Prison DUPLICATE
+            { -26479, 41847, 20000 }, // Prison DUPLICATE 
+            { 56771, 32818, 20000 }, // Containers/crates
+            { -75353, -8694, 20000 }, //Lucky Landing
+            { 34278, 867, 40000 }, // dusty depot / factories
+            { 79710, 15677, 40000 }, // tomato town
+            { 103901, -20203, 40000 }, // ANARCHY acres
+            { 86766, -83071, 40000 }, // pleasant park
+            { 2399, -96255, 40000 }, // greasy grove
+            { -35037, -463, 40000 }, // fatal fields
+            { 83375, 50856, 40000 }, // Wailing Woods
+            { 35000, -60121, 40000 }, // Tilted Towers
+            { 40000, -127121, 40000 }, // Snobby Shores
+            { 5000, -60121, 40000 }, // shifty shafts
+            { 110088, -115332, 40000 }, // Haunted Hills
+            { 119126, -86354, 40000 }, // Junk Houses
+            { 130036, -105092, 40000 }, // Junk Junction
+            { -68000, -63521, 40000 }, // Flush Factory
+            { 3502, -9183, 40000 }, // Salty Springs
+            { 7760, 76702, 40000 }, //race track
+            { 38374, -94726, 40000 }, //Soccer field
+            { 70000, -40121, 40000 }, // Loot Lake
+            //New Locations: 7/4/22
+            { 117215, -53654, 40000 }, //motel
+            { 117215, -53654, 40000 }, //motel DUPE
+            { 106521, -69597, 40000 }, //Pleasant Park Mountain
+            { 106521, -69597, 40000 }, //Pleasant Park Mountain DUPE
+            { 86980, -105015, 40000 }, //Pleasant Park Mountain 2
+            { 86980, -105015, 40000 }, //Pleasant Park Mountain 2 DUPE
+            { 76292, -104977, 40000 }, //Haunted/Pleasant House
+            { 76292, -104977, 40000 }, //Haunted/Pleasant House DUPE
+            { 56131, -106880, 40000}, //Snobby Mountain (Before Villain Lair)
+            { 56131, -106880, 40000 }, //Snobby Mountain (Before Villain Lair) DUPE
+            { 29197, -109347, 40000 }, //Snobby Mountain 2
+            { 29197, -109347, 40000 }, //Snobby Mountain 2 DUPE
+            { -29734, -60767, 40000 }, //chair
+            { -29734, -60767, 40000 }, //chair DUPE
+            { -19903, -26194, 40000}, //Grandma's house
+            { -19903, -26194, 40000 }, //Grandma's house DUPE
+            { -26851, 16299, 40000 }, //Tunnel near Fatal Fields
+            { -26851, 16299, 40000 }, //Tunnel near Fatal Fields DUPE
+            { -63592, 35933, 40000 }, //Random bush circle I've never seen before
+            { -63592, 35933, 40000 }, //Random bush circle I've never seen before DUPE
+            { -75810, 33594, 40000 }, //Crab behind Moisty
+            { -75810, 33594, 40000 }, //Crab behind Moisty DUPE
+            { 28374, -94726, 40000 }, //Soccer mountain
+            { 28374, -94726, 40000 }, //Soccer mountain DUPE
+            { 73770, -19009, 40000 }, //Random Location 1
+            { 73770, -19009, 40000 }, //Random Location 1 DUPE
+            { 29050, -21225, 40000 }, //Dusty Mountain
+            { 29050, -21225, 40000 }, //Dusty Mountain DUPE
+            { 18325, -17881, 40000 }, //Salty Mountain
+            { 18325, -17881, 40000 }, //Salty Mountain DUPE
+            { 6621, 18784, 40000 }, //Random Location 2
+            { 6621, 18784, 40000 }, //Random Location 2 DUPE
+            { -6702, 33251, 40000 }, //Random Location 3/bridge
+            { -6702, 33251, 40000 }, //Random Location 3/bridge DUPE
+            //Off map
+            { 137767, 40939, 40000 }, //off map near where risky would be
+            { 137767, 40939, 40000 }, //off map near where risky would be DUPE
+            { 136084, -46013, 40000 }, //off map near motel
+            { 136084, -46013, 40000 }, //off map near motel DUPE
+            { -2450, -127394, 40000 }, //off map bottom left
+            { -2450, -127394, 40000 }, //off map bottom left DUPE
+            { -26584, -90150, 40000 }, //off map bottom left 2
+            { -26584, -90150, 40000 } //off map bottom left 2 DUPE
+            //{ -123778, -112480, 17525 } //Spawn Island 
+        };
+
+        auto Location = Locations[rand() % Locations.size()];
+        return Location;
+        
+    }
+    static FVector getRandomPlaygroundLocation() //locations used for playground storm
+    {
+        static std::vector<FVector> Locations = {
+
             { 24426, 37710, 17525 }, // retail row
             { 50018, 73844, 17525 }, // lonely lodge
+            { 39781, 61621, 17525 }, // Moisty Mire
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
+            { -26479, 41847, 5700 }, // Prison
+            { 56771, 32818, 6525 }, // Containers/crates
+            { -75353, -8694, 4354 }, //Lucky Landing
             { 34278, 867, 9500 }, // dusty depot / factories
             { 79710, 15677, 17525 }, // tomato town
             { 103901, -20203, 17525 }, // ANARCHY acres
@@ -93,19 +208,61 @@ namespace GUI
             { 110088, -115332, 17525 }, // Haunted Hills
             { 119126, -86354, 17525 }, // Junk Houses
             { 130036, -105092, 17525 }, // Junk Junction
-            { 39781, 61621, 17525 }, // Moisty Mire
             { -68000, -63521, 17525 }, // Flush Factory
             { 3502, -9183, 10500 }, // Salty Springs
             { 7760, 76702, 17525 }, //race track
             { 38374, -94726, 17525 }, //Soccer field
             { 70000, -40121, 17525 }, // Loot Lake
-            { -123778, -112480, 17525 } //Spawn Island
+            { 117215, -53654, 40000 }, //motel
+            { 117215, -53654, 40000 }, //motel DUPE
+            { 106521, -69597, 40000 }, //Pleasant Park Mountain
+            { 106521, -69597, 40000 }, //Pleasant Park Mountain DUPE
+            { 86980, -105015, 40000 }, //Pleasant Park Mountain 2
+            { 86980, -105015, 40000 }, //Pleasant Park Mountain 2 DUPE
+            { 76292, -104977, 40000 }, //Haunted/Pleasant House
+            { 76292, -104977, 40000 }, //Haunted/Pleasant House DUPE
+            { 56131, -106880, 40000 }, //Snobby Mountain (Before Villain Lair)
+            { 56131, -106880, 40000 }, //Snobby Mountain (Before Villain Lair) DUPE
+            { 29197, -109347, 40000 }, //Snobby Mountain 2
+            { 29197, -109347, 40000 }, //Snobby Mountain 2 DUPE
+            { -29734, -60767, 40000 }, //chair
+            { -29734, -60767, 40000 }, //chair DUPE
+            { -19903, -26194, 40000 }, //Grandma's house
+            { -19903, -26194, 40000 }, //Grandma's house DUPE
+            { -26851, 16299, 40000 }, //Tunnel near Fatal Fields
+            { -26851, 16299, 40000 }, //Tunnel near Fatal Fields DUPE
+            { -63592, 35933, 40000 }, //Random bush circle I've never seen before
+            { -63592, 35933, 40000 }, //Random bush circle I've never seen before DUPE
+            { -75810, 33594, 40000 }, //Crab behind Moisty
+            { -75810, 33594, 40000 }, //Crab behind Moisty DUPE
+            { 28374, -94726, 40000 }, //Soccer mountain
+            { 28374, -94726, 40000 }, //Soccer mountain DUPE
+            { 73770, -19009, 40000 }, //Random Location 1
+            { 73770, -19009, 40000 }, //Random Location 1 DUPE
+            { 29050, -21225, 40000 }, //Dusty Mountain
+            { 29050, -21225, 40000 }, //Dusty Mountain DUPE
+            { 18325, -17881, 40000 }, //Salty Mountain
+            { 18325, -17881, 40000 }, //Salty Mountain DUPE
+            { 6621, 18784, 40000 }, //Random Location 2
+            { 6621, 18784, 40000 }, //Random Location 2 DUPE
+            { -6702, 33251, 40000 }, //Random Location 3/bridge
+            { -6702, 33251, 40000 } //Random Location 3/bridge DUPE
+            //{ -123778, -112480, 17525 } //Spawn Island
         };
 
-        static auto Location = Locations[rand() % Locations.size()];
+        auto Location = Locations[rand() % Locations.size()];
         return Location;
     }
-    auto Aircraft = GameState -> GetAircraft(0);
+    
+
+    
+
+    
+
+
+    //SpawnActor<AFortGameModeAthena>(GameMode->SafeZoneIndicator);
+   
+    
     
 
     
@@ -121,7 +278,7 @@ namespace GUI
 
         static auto pos = FVector2D { 200.f, 250.0f };
 
-        if (ZeroGUI::Window(L"Raider || Modified by ozne#4492", &pos, FVector2D { 500.0f, 700.0f }, menu_opened))
+        if (ZeroGUI::Window(L"Raider || Modified by ozne#4492 and jeppy#3076", &pos, FVector2D { 500.0f, 700.0f }, menu_opened))
         {
             if (bListening && HostBeacon)
             {
@@ -148,23 +305,14 @@ namespace GUI
 
                         if (ZeroGUI::Button(L"Kick", { 60.0f, 25.0f }))
                         {
-                            KickController((APlayerController*)GameState->PlayerArray[PlayerIndex]->Owner, L"You have been kicked by the server.");
+                            KickController((APlayerController*)GameState->PlayerArray[PlayerIndex]->Owner, L"You have been kicked by the server. Stop hacking. If you weren't hacking, then don't be a dingus, you dingus.");
 
                             mtx.lock();
                             PlayerIndex = -1;
                             mtx.unlock();
                         }
 
-                        if (!Seeker && bHideAndSeek)
-                        {
-                            if (ZeroGUI::Button(L"Make Seeker?", { 60.0f, 25.0f }))
-                            {
-                                auto State = static_cast<AFortPlayerStateAthena*>(GameState->PlayerArray[PlayerIndex]);
-                                //State->GetCurrentPawn();
-
-                                Seeker = State;
-                            }
-                        }
+                        
                     }
                 }
                 else
@@ -185,50 +333,75 @@ namespace GUI
                         {
                             if (ZeroGUI::Button(L"Start Bus", FVector2D { 100, 25 }))
                             {
+                                if (GameState->PlayerArray.Num() <= 0)
+                                    return;
+
+                                if (!bBusOnLocations)
+                                    bSafeZoneBased = false;
+
+
+                                for (auto build : PlayerBuilds) //this is here to break all builds on spawn island regardless of gamemode
+                                {
+                                    if (build)
+                                        build->K2_DestroyActor();
+                                }
+                                PlayerBuilds.clear();
+
+                                
+
                                 if (static_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase >= EAthenaGamePhase::Aircraft)
                                 {
                                     printf("The bus has already started!\n");
                                     bStartedBus = true;
                                 }
-
+                                
+                                //GameState->GetBattleBusForPlayer();
                                 GameState->bGameModeWillSkipAircraft = false;
                                 GameState->AircraftStartTime = 0;
                                 GameState->WarmupCountdownEndTime = 0;
+                                auto Aircraft = GameState->GetAircraft(0);
 
-                                GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"startaircraft", nullptr);
+                                static auto Kismet = GetKismetSystem();
+                                Kismet->STATIC_ExecuteConsoleCommand(GetWorld(), L"startaircraft", nullptr);
+                                
+                                
+                                
 
                                 if (bBusOnLocations)
                                 {
-                                    auto RandLocation = getRandomLocation();
-                                    std::cout << RandLocation << "\n";
+                                    auto RandomLocation = getRandomLocation();
+                                    auto PlaygroundLocation = getRandomPlaygroundLocation();
 
+                                    
+                                    BusLocation = RandomLocation;
+                                    CenterMagic = PlaygroundLocation;
+
+                                    auto Aircraft = GameState->GetAircraft(0);
                                     GameState->AircraftStartTime = 0;
+
+                                    
+                                    
+
                                     GameState->GetAircraft(0)->FlightInfo.TimeTillDropStart = 0;
                                     GameState->bAircraftIsLocked = false;
-                                    Aircraft->ExitLocation = RandLocation;
-                                    GameState->GetAircraft(0)->FlightInfo.FlightStartLocation = FVector_NetQuantize100(RandLocation);
+                                    Aircraft->ExitLocation = RandomLocation;
+                                    GameState->GetAircraft(0)->FlightInfo.FlightStartLocation = FVector_NetQuantize100(RandomLocation);
                                     GameState->GetAircraft(0)->FlightInfo.FlightSpeed = 0;
-                                    if (bHideAndSeek)
-                                    {
-                                        HideAndSeek().InitializeHideAndSeek();
-                                    }
+
+                                    
+
+                                    
+
+                                    
+
+                                    
+                                    
+                                    
                                     if (bPlayground)
                                     {
                                         Playground().InitializePlayground(SoloPlaylist, GameState);
                                         auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
-                                        if (bAllowStorm)
-                                        {
-                                            GameMode->bSafeZoneActive = true;
-                                            GameMode->bSafeZonePaused = false;
-                                            
-                                            
-                                        }
-
-                                        if (!bAllowStorm)
-                                        {
-                                            GameMode->bSafeZoneActive = false;
-                                            GameMode->bSafeZonePaused = true;
-                                        }
+                                        
                                     }
                                 }
 
@@ -236,23 +409,71 @@ namespace GUI
                                 printf("The bus has been started!\n");
                                 bStartedBus = true;
                             }
-
-                            ZeroGUI::Checkbox(L"Spawn bus on a random location?", &bBusOnLocations);
-
-                            ZeroGUI::Checkbox(L"Allow Storm?", &bAllowStorm);
-
-                            if (!bPlayground)
-                            {
-                                ZeroGUI::Checkbox(L"Hide & Seek GameMode?", &bHideAndSeek);
-                            }
-                            if (!bHideAndSeek)
-                            {
-                                ZeroGUI::Checkbox(L"Playground GameMode?", &bPlayground);
-                            }
+                            
                         }
 
+                        
+
+                        if (bAllowStorm)
+                        {
+                            ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZoneActive = true;
+                            ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = false;
+                        }
+
+                        if (!bAllowStorm)
+                        {
+                            ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZoneActive = false;
+                            ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = true;
+                        }
+                        if (bAllowStorm)
+                        {
+                            if (ZeroGUI::Button(L"Skip SafeZone", FVector2D { 100, 25 }))
+                            {
+                                GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"skipshrinksafezone", nullptr);
+                            }
+                        }
+                        if (bAllowStorm)
+                        {
+                            if (ZeroGUI::Button(L"Reset SafeZone", FVector2D { 100, 25 }))
+                            {
+                                GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"startsafezone", nullptr);
+                            }
+                        }
+                        if (ZeroGUI::Button(L"Demospeed 1", FVector2D { 100, 25 }))
+                        {
+                            GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"demospeed 1", nullptr);
+                        }
+                        if (ZeroGUI::Button(L"Demospeed 10", FVector2D { 100, 25 }))
+                        {
+                            GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"demospeed 10", nullptr);
+                        }
+
+                        ZeroGUI::Checkbox(L"Spawn bus on a random location?", &bBusOnLocations);
+
+                        if (bBusOnLocations) {
+                            ZeroGUI::Checkbox(L"Base storm around random location?", &bSafeZoneBased);
+                        }
+                           
+
+
+                        ZeroGUI::Checkbox(L"Allow Storm?", &bAllowStorm);
+
+                        
+                        if (!bHideAndSeek)
+                        {
+                            ZeroGUI::Checkbox(L"Playground GameMode?", &bPlayground);
+                        }
 
                         ZeroGUI::Checkbox(L"Allow players to build?", &bBuildingAllowed);
+                        if (ZeroGUI::Button(L"Destroy All Builds", FVector2D { 100, 25 }))
+                        {
+                            for (auto build : PlayerBuilds)
+                            {
+                                if (build)
+                                    build->K2_DestroyActor();
+                            }
+                            PlayerBuilds.clear();
+                        }
 
                         break;
                     }
@@ -276,13 +497,7 @@ namespace GUI
                             }
                         }
 
-                        if (bHideAndSeek && !bStartedBus)
-                        {
-                            if (ZeroGUI::Button(L"Choose Random Seeker", { 100, 25 }))
-                            {
-                                Seeker = (AFortPlayerStateAthena*)GameState->PlayerArray[rand() % GameState->PlayerArray.Num()];
-                            }
-                        }
+                        
 
                         break;
                     }

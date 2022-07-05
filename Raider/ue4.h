@@ -2,7 +2,6 @@
 
 #include <unordered_set>
 #include <random>
-
 #include "json.hpp"
 #include "native.h"
 
@@ -16,7 +15,11 @@ inline bool bListening = false;
 static bool bSpawnedFloorLoot = false;
 static bool bMapFullyLoaded = false;
 
+std::map<EFortTeam, bool> teamsmap;
+bool hasSetup = false;
+
 static std::unordered_set<ABuildingSMActor*> Buildings;
+std::vector<ABuildingSMActor*> PlayerBuilds;
 static AFortOnlineBeaconHost* HostBeacon = nullptr;
 
 inline UWorld* GetWorld()
@@ -36,6 +39,7 @@ inline AAthena_PlayerController_C* GetPlayerController(int32 Index = 0)
 
     return (AAthena_PlayerController_C*)GetWorld()->OwningGameInstance->LocalPlayers[Index]->PlayerController;
 }
+
 
 struct FNetworkObjectInfo
 {
@@ -339,6 +343,7 @@ inline void Build(AFortPlayerControllerAthena* PC, ABuildingSMActor* BuildingAct
         BuildingActor->InitializeKismetSpawnedBuildingActor(BuildingActor, PC);
         auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
         BuildingActor->Team = PlayerState->TeamIndex;
+        PlayerBuilds.push_back(BuildingActor);
     }
     else
     {
@@ -1116,6 +1121,21 @@ inline UFortWeaponRangedItemDefinition* FindWID(const std::string& WID)
     return Def;
 }
 
+inline UAthenaGliderItemDefinition* FindGlideID(const std::string& Glider_ID)
+{
+    auto Def = UObject::FindObject<UAthenaGliderItemDefinition>("AthenaGliderItemDefinition " + Glider_ID + '.' + Glider_ID);
+
+    if (!Def)
+    {
+        Def = UObject::FindObject<UAthenaGliderItemDefinition>("Glider_ID_" + Glider_ID + "_ShuttleB" + ".Glider_ID_" + Glider_ID + "_ShuttleB");
+
+        if (!Def)
+            Def = UObject::FindObject<UAthenaGliderItemDefinition>(Glider_ID + "." + Glider_ID);
+    }
+
+    return Def;
+}
+
 void EquipLoadout(AFortPlayerControllerAthena* Controller, std::vector<UFortWeaponRangedItemDefinition*> WIDS)
 {
     FFortItemEntry pickaxeEntry;
@@ -1136,10 +1156,14 @@ void EquipLoadout(AFortPlayerControllerAthena* Controller, std::vector<UFortWeap
 
             if (i == 0)
                 pickaxeEntry = entry;
+
+            
         }
+        
     }
 
     EquipInventoryItem(Controller, pickaxeEntry.ItemGuid);
+
 }
 
 auto RandomIntInRange(int min, int max)

@@ -10546,6 +10546,7 @@ public:
 	bool STATIC_TimespanFromString(const struct FString& TimespanString, struct FTimespan* Result);
 	struct FTransform STATIC_TEase(const struct FTransform& A, const struct FTransform& B, float Alpha, TEnumAsByte<EEasingFunc> EasingFunc, float BlendExp, int Steps);
 	float STATIC_Tan(float A);
+	static int RandomInteger(int Max);
 	struct FVector STATIC_Subtract_VectorVector(const struct FVector& A, const struct FVector& B);
 	struct FVector STATIC_Subtract_VectorInt(const struct FVector& A, int B);
 	struct FVector STATIC_Subtract_VectorFloat(const struct FVector& A, float B);
