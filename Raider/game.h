@@ -27,7 +27,7 @@ namespace Game
 
         GameState->bGameModeWillSkipAircraft = true;
         GameState->AircraftStartTime = 9999.9f;
-        GameState->WarmupCountdownEndTime = 9999.9f;
+        GameState->WarmupCountdownEndTime = 99999.9f;
 
         GameState->GamePhase = EAthenaGamePhase::Warmup;
         GameState->OnRep_GamePhase(EAthenaGamePhase::None);

@@ -267,28 +267,28 @@ namespace Hooks
         
 
         static std::vector<std::string> AssaultRiflePool = {
-                "WID_Assault_Auto_Athena_C_Ore_T03",
-                "WID_Assault_Auto_Athena_UC_Ore_T03",
+                //"WID_Assault_Auto_Athena_C_Ore_T03",
+                //"WID_Assault_Auto_Athena_UC_Ore_T03",
                 "WID_Assault_Auto_Athena_R_Ore_T03",
                 "WID_Assault_AutoHigh_Athena_VR_Ore_T03",
                 "WID_Assault_AutoHigh_Athena_SR_Ore_T03",
-                "WID_Assault_SemiAuto_Athena_C_Ore_T02",
+                //"WID_Assault_SemiAuto_Athena_C_Ore_T02",
                 "WID_Assault_SemiAuto_Athena_R_Ore_T03",
-                "WID_Assault_SemiAuto_Athena_UC_Ore_T03",
-                "WID_Pistol_AutoHeavy_Athena_C_Ore_T02",
+                //"WID_Assault_SemiAuto_Athena_UC_Ore_T03",
+                //"WID_Pistol_AutoHeavy_Athena_C_Ore_T02",
                 "WID_Pistol_AutoHeavy_Athena_R_Ore_T03",
-                "WID_Pistol_AutoHeavy_Athena_UC_Ore_T03",
-                "WID_Pistol_AutoHeavySuppressed_Athena_C_Ore_T02",
+                //"WID_Pistol_AutoHeavy_Athena_UC_Ore_T03",
+                //"WID_Pistol_AutoHeavySuppressed_Athena_C_Ore_T02",
                 "WID_Pistol_AutoHeavySuppressed_Athena_R_Ore_T03",
-                "WID_Pistol_AutoHeavySuppressed_Athena_UC_Ore_T03",
+                //"WID_Pistol_AutoHeavySuppressed_Athena_UC_Ore_T03",
                 "WID_Pistol_Scavenger_Athena_R_Ore_T03",
-                "WID_Pistol_Scavenger_Athena_UC_Ore_T03",
+                //"WID_Pistol_Scavenger_Athena_UC_Ore_T03",
                 "WID_Pistol_Scavenger_Athena_VR_Ore_T03"
 
             };
         static std::vector<std::string> ShotgunPool = {
-            "WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
-            "WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
+            //"WID_Shotgun_SemiAuto_Athena_R_Ore_T03",
+            //"WID_Shotgun_SemiAuto_Athena_UC_Ore_T03",
             "WID_Shotgun_SemiAuto_Athena_VR_Ore_T03",
             "WID_Shotgun_SlugFire_Athena_SR",
             "WID_Shotgun_SlugFire_Athena_VR",
@@ -302,12 +302,12 @@ namespace Hooks
             "WID_Sniper_Crossbow_Athena_R_Ore_T03",
             "WID_Sniper_Crossbow_Athena_VR_Ore_T03",
             "WID_Sniper_NoScope_Athena_R_Ore_T03",
-            "WID_Sniper_NoScope_Athena_UC_Ore_T03",
+            //"WID_Sniper_NoScope_Athena_UC_Ore_T03",
             "WID_Sniper_Standard_Scope_Athena_SR_Ore_T03",
             "WID_Sniper_Standard_Scope_Athena_VR_Ore_T03",
-            "WID_Pistol_SixShooter_Athena_C_Ore_T02",
+            //"WID_Pistol_SixShooter_Athena_C_Ore_T02",
             "WID_Pistol_SixShooter_Athena_R_Ore_T03",
-            "WID_Pistol_SixShooter_Athena_UC_Ore_T03",
+            //"WID_Pistol_SixShooter_Athena_UC_Ore_T03",
             "WID_Assault_LMG_Athena_SR_Ore_T03",
             "WID_Assault_LMG_Athena_VR_Ore_T03",
             "WID_Assault_LMGSAW_Athena_R_Ore_T03",
@@ -605,6 +605,20 @@ namespace Hooks
         DETOUR_END
     }
 
+    void DetachNetworkHooks()
+    {
+        DETOUR_START
+        DetourDetachE(Native::World::WelcomePlayer, WelcomePlayer);
+        DetourDetachE(Native::Actor::GetNetMode, GetNetMode);
+        DetourDetachE(Native::World::NotifyControlMessage, World_NotifyControlMessage);
+        DetourDetachE(Native::World::SpawnPlayActor, SpawnPlayActor);
+        DetourDetachE(Native::OnlineBeaconHost::NotifyControlMessage, Beacon_NotifyControlMessage);
+        DetourDetachE(Native::OnlineSession::KickPlayer, KickPlayer);
+        DetourDetachE(Native::GameViewportClient::PostRender, PostRender);
+        DetourDetachE(Native::GC::CollectGarbage, CollectGarbage);
+        DETOUR_END
+    }
+
     UNetConnection* SpectatorConnection;
     AFortPlayerStateAthena* ToSpectatePlayerState;
 
@@ -643,6 +657,43 @@ namespace Hooks
             PlayerBuilds.clear();
         }
 
+        if (Function->GetName().find("Tick") != std::string::npos && bRestart)
+        {
+            bRestart = false;
+            bTraveled = false;
+            bPlayButton = false;
+            bListening = false;
+            bReadyToStart = false;
+            bSpawnedFloorLoot = false;
+            bMapFullyLoaded = false;
+            bStartedBus = false;
+            HostBeacon = nullptr;
+            bCosmetics = true;
+            bLoadoutRegular = true;
+            bLoadoutExplosives = false;
+            bLoadoutSnipers = false;
+            bLoadoutRandom = false;
+            bBusOnLocations = false;
+            bBuildingAllowed = true;
+            bRespawn = false;
+            bHideAndSeek = false;
+            bPlayground = false;
+            bAllowStorm = true;
+            bSafeZoneBased = false;
+            ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = false;
+            SpectatorConnection = nullptr;
+            ToSpectatePlayerState = nullptr;
+            PlayerBuilds.clear();
+            for (auto team : teamsmap)
+            {
+                if (team.second)
+                    teamsmap.insert_or_assign(team.first, false);
+                else
+                    break;
+            }
+            DetachNetworkHooks();
+            GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"open frontend", GetPlayerController());
+        }
         
 
 
@@ -685,7 +736,7 @@ namespace Hooks
         {
             auto Indicator = (ASafeZoneIndicator_C*)Object;
             auto SafeZonePhase = ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase;
-            static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
+            //static auto GameState = reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState);
             
             
             
@@ -695,16 +746,25 @@ namespace Hooks
             {
             case 0:
                 Indicator->Radius = 15000;
-                Indicator->NextRadius = 1500;
+                GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
+                Indicator->NextRadius = 9500;
                 Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
                 break;
             case 1:
-                Indicator->NextRadius = 1500;
+                GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
+                Indicator->NextRadius = 9500;
                 Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
                 break;
             case 2:
+                GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
+                Indicator->NextRadius = 1000;
+                Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
+                break;
+            case 3:
+                GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"startshrinksafezone", nullptr);
                 Indicator->NextRadius = 0;
                 Indicator->NextCenter = (FVector_NetQuantize100)CenterMagic;
+                break;
             default:
                 //Indicator->NextRadius = 5;
                 break;
@@ -868,7 +928,7 @@ namespace Hooks
                 if (bPlayground && IsKiller)
                     Playground().OnDeath((AFortPlayerPawnAthena*)KillerPawn);
 
-                if (GameState->PlayersLeft == 1)
+                if (GameState->PlayersLeft == 1 && bStartedBus)
                 {
                     if (!bPlayground)
                     {

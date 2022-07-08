@@ -5,6 +5,7 @@
 #include "json.hpp"
 #include "native.h"
 
+
 constexpr auto PI = 3.1415926535897932f;
 constexpr auto INV_PI = 0.31830988618f;
 constexpr auto HALF_PI = 1.57079632679f;
@@ -928,7 +929,7 @@ FTransform GetPlayerStart(AFortPlayerControllerAthena* PC)
     auto SpawnTransform = FTransform();
     SpawnTransform.Scale3D = FVector(1, 1, 1);
     SpawnTransform.Rotation = FQuat();
-    SpawnTransform.Translation = FVector{ 1250, 1818, 3284 }; // Next to salty
+    SpawnTransform.Translation = FVector { 1250, 1818, 3284 }; // Next to salty
 
     auto GamePhase = ((AAthena_GameState_C*)GetWorld()->GameState)->GamePhase;
 

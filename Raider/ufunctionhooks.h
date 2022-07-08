@@ -460,8 +460,7 @@ namespace UFunctionHooks
             auto PC = (AFortPlayerControllerAthena*)Object;
             auto GameState = (AAthena_GameState_C*)GetWorld()->AuthorityGameMode->GameState;
             
-            //GameState->SafeZonesStartTime = 0.0f;
-
+           
 
             if (PC && Params && !PC->Pawn && PC->IsInAircraft())
             {
@@ -591,7 +590,7 @@ namespace UFunctionHooks
                       })
 
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerPlayEmoteItem", {
-            if (!Object->IsA(AFortPlayerControllerAthena::StaticClass()))
+                          if (!Object->IsA(AFortPlayerControllerAthena::StaticClass()))
                 return false;
 
            
@@ -784,11 +783,6 @@ namespace UFunctionHooks
 
         DEFINE_PEHOOK("Function FortniteGame.FortGameModeAthena.OnAircraftExitedDropZone", {
             auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
-            
-            
-            
-            
-
 			if (GetWorld() && GetWorld()->NetDriver && GetWorld()->NetDriver->ClientConnections.Data)
             {
                 auto Connections = HostBeacon->NetDriver->ClientConnections;
