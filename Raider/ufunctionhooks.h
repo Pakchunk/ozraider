@@ -420,7 +420,7 @@ namespace UFunctionHooks
 
                     InitPawn(PC, ExitLocation, FQuat(), false);
                     ((AAthena_GameState_C*)GetWorld()->AuthorityGameMode->GameState)->Aircrafts[0]->PlayEffectsForPlayerJumped();
-
+                    PlayersJumpedFromBus++;
                     auto State = static_cast<AFortPlayerStateAthena*>(PC->PlayerState);
 
                     //Seeker = (AFortPlayerPawnAthena*)State->GetCurrentPawn();
@@ -443,6 +443,14 @@ namespace UFunctionHooks
                     auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
                     PlayerState->OnRep_CharacterParts();
                     // PC->Pawn->K2_TeleportTo(ExitLocation, Params->ClientRotation);
+                    if (PlayersJumpedFromBus >= GameState->PlayerArray.Num())
+                    {
+                        ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->OnAircraftExitedDropZone(GameState->GetAircraft(0));
+                        GameState->SafeZonesStartTime -= 59;
+                        //GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"startaircraft", nullptr);
+                        //GameState->GamePhase = EAthenaGamePhase::SafeZones;
+                        //GameState->OnRep_GamePhase(EAthenaGamePhase::Aircraft);
+                    }
                 }
             }
 

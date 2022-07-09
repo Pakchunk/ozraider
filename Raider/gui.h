@@ -19,6 +19,7 @@ bool bReadyToStart = false;
 bool bStormPaused = false;
 bool bRestart = false;
 bool bSafeZoneBased = false;
+bool bLooting = false;
 
 FVector BusLocation;
 // pregame
@@ -46,49 +47,81 @@ namespace GUI
     {
         static std::vector<FVector> Locations = {
 
-            { 24426, 37710, 17525 }, // retail row
-            { 50018, 73844, 17525 }, // lonely lodge
-            { 39781, 61621, 17525 }, // Moisty Mire
-            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
-            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
-            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
-            { 39781, 61621, 17525 }, // Moisty Mire DUPLICATE
-            { -26479, 41847, 5700 }, // Prison
-            { -26479, 41847, 5700 }, // Prison DUPLICATE
-            { -26479, 41847, 5700 }, // Prison DUPLICATE
-            { -26479, 41847, 5700 }, // Prison DUPLICATE
-            { -26479, 41847, 5700 }, // Prison DUPLICATE
-            { -26479, 41847, 5700 }, // Prison DUPLICATE
-            { 56771, 32818, 6525 }, // Containers/crates
-            { 56771, 32818, 6525 }, // Containers/crates DUPLICATE
-            { 56771, 32818, 6525 }, // Containers/crates DUPLICATE
-            { 56771, 32818, 6525 }, // Containers/crates DUPLICATE
-            { -75353, -8694, 4354 }, //Lucky Landing
-            { -75353, -8694, 4354 }, // Lucky Landing DUPLICATE
-            { -75353, -8694, 4354 }, // Lucky Landing DUPLICATE
-            { -75353, -8694, 4354 }, // Lucky Landing DUPLICATE
-            { 34278, 867, 9500 }, // dusty depot / factories
-            { 79710, 15677, 17525 }, // tomato town
-            { 103901, -20203, 17525 }, // ANARCHY acres
-            { 86766, -83071, 17525 }, // pleasant park
-            { 2399, -96255, 17525 }, // greasy grove
-            { -35037, -463, 13242 }, // fatal fields
-            { 83375, 50856, 17525 }, // Wailing Woods
-            { 35000, -60121, 20525 }, // Tilted Towers Duplicate
-            { 35000, -60121, 20525 }, // Tilted Towers Duplicate
-            { 35000, -60121, 20525 }, // Tilted Towers Duplicate
-            { 35000, -60121, 20525 }, // Tilted Towers
-            { 40000, -127121, 17525 }, // Snobby Shores
-            { 5000, -60121, 10748 }, // shifty shafts
-            { 110088, -115332, 17525 }, // Haunted Hills
-            { 119126, -86354, 17525 }, // Junk Houses
-            { 130036, -105092, 17525 }, // Junk Junction
-            { -68000, -63521, 17525 }, // Flush Factory
-            { 3502, -9183, 10500 }, // Salty Springs
-            { 7760, 76702, 17525 }, //race track
-            { 38374, -94726, 17525 }, //Soccer field
-            { 70000, -40121, 17525 } // Loot Lake
-            //{ -123778, -112480, 17525 } //Spawn Island
+            { 24426, 37710, 25000 }, // retail row
+            { 50018, 73844, 25000 }, // lonely lodge
+            { 39781, 61621, 25000 }, // Moisty Mire
+            { 39781, 61621, 25000 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 25000 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 25000 }, // Moisty Mire DUPLICATE
+            { 39781, 61621, 25000 }, // Moisty Mire DUPLICATE
+            { -26479, 41847, 20000 }, // Prison
+            { -26479, 41847, 20000 }, // Prison DUPLICATE
+            { -26479, 41847, 20000 }, // Prison DUPLICATE
+            { 56771, 32818, 20000 }, // Containers/crates
+            { -75353, -8694, 20000 }, //Lucky Landing
+            { 34278, 867, 25000 }, // dusty depot / factories
+            { 79710, 15677, 25000 }, // tomato town
+            { 103901, -20203, 25000 }, // ANARCHY acres
+            { 86766, -83071, 25000 }, // pleasant park
+            { 2399, -96255, 25000 }, // greasy grove
+            { -35037, -463, 25000 }, // fatal fields
+            { 83375, 50856, 25000 }, // Wailing Woods
+            { 35000, -60121, 25000 }, // Tilted Towers
+            { 25000, -127121, 25000 }, // Snobby Shores
+            { 5000, -60121, 25000 }, // shifty shafts
+            { 110088, -115332, 25000 }, // Haunted Hills
+            { 119126, -86354, 25000 }, // Junk Houses
+            { 130036, -105092, 25000 }, // Junk Junction
+            { -68000, -63521, 25000 }, // Flush Factory
+            { 3502, -9183, 25000 }, // Salty Springs
+            { 7760, 76702, 25000 }, //race track
+            { 38374, -94726, 25000 }, //Soccer field
+            { 70000, -40121, 25000 }, // Loot Lake
+            //New Locations: 7/4/22
+            { 117215, -53654, 25000 }, //motel
+            { 117215, -53654, 25000 }, //motel DUPE
+            { 106521, -69597, 25000 }, //Pleasant Park Mountain
+            { 106521, -69597, 25000 }, //Pleasant Park Mountain DUPE
+            { 86980, -105015, 25000 }, //Pleasant Park Mountain 2
+            { 86980, -105015, 25000 }, //Pleasant Park Mountain 2 DUPE
+            { 76292, -104977, 25000 }, //Haunted/Pleasant House
+            { 76292, -104977, 25000 }, //Haunted/Pleasant House DUPE
+            { 56131, -106880, 25000 }, //Snobby Mountain (Before Villain Lair)
+            { 56131, -106880, 25000 }, //Snobby Mountain (Before Villain Lair) DUPE
+            { 29197, -109347, 25000 }, //Snobby Mountain 2
+            { 29197, -109347, 25000 }, //Snobby Mountain 2 DUPE
+            { -29734, -60767, 25000 }, //chair
+            { -29734, -60767, 25000 }, //chair DUPE
+            { -19903, -26194, 25000 }, //Grandma's house
+            { -19903, -26194, 25000 }, //Grandma's house DUPE
+            { -26851, 16299, 25000 }, //Tunnel near Fatal Fields
+            { -26851, 16299, 25000 }, //Tunnel near Fatal Fields DUPE
+            { -63592, 35933, 25000 }, //Random bush circle I've never seen before
+            { -63592, 35933, 25000 }, //Random bush circle I've never seen before DUPE
+            { -75810, 33594, 25000 }, //Crab behind Moisty
+            { -75810, 33594, 25000 }, //Crab behind Moisty DUPE
+            { 28374, -94726, 25000 }, //Soccer mountain
+            { 28374, -94726, 25000 }, //Soccer mountain DUPE
+            { 73770, -19009, 25000 }, //Random Location 1
+            { 73770, -19009, 25000 }, //Random Location 1 DUPE
+            { 29050, -21225, 25000 }, //Dusty Mountain
+            { 29050, -21225, 25000 }, //Dusty Mountain DUPE
+            { 18325, -17881, 25000 }, //Salty Mountain
+            { 18325, -17881, 25000 }, //Salty Mountain DUPE
+            { 6621, 18784, 25000 }, //Random Location 2
+            { 6621, 18784, 25000 }, //Random Location 2 DUPE
+            { -6702, 33251, 25000 }, //Random Location 3/bridge
+            { -6702, 33251, 25000 }, //Random Location 3/bridge DUPE
+            //Off map
+            { 137767, 40939, 25000 }, //off map near where risky would be
+            { 137767, 40939, 25000 }, //off map near where risky would be DUPE
+            { 136084, -46013, 25000 }, //off map near motel
+            { 136084, -46013, 25000 }, //off map near motel DUPE
+            { -2450, -127394, 25000 }, //off map bottom left
+            { -2450, -127394, 25000 }, //off map bottom left DUPE
+            { -26584, -90150, 25000 }, //off map bottom left 2
+            { -26584, -90150, 25000 }, //off map bottom left 2 DUPE
+            { -123778, -112480, 17525 } //Spawn Island
         };
 
         auto Location = Locations[rand() % Locations.size()];
@@ -301,6 +334,8 @@ namespace GUI
                     ZeroGUI::Checkbox(L"Regular Loadout", &bLoadoutRegular);
                     ZeroGUI::Checkbox(L"Rockets Loadout", &bLoadoutExplosives);
                     ZeroGUI::Checkbox(L"Snipers Loadout", &bLoadoutSnipers);
+                    ZeroGUI::Text(L"World", false, true);
+                    ZeroGUI::Checkbox(L"Enable Looting?", &bLooting);
 
                     if (bLoadoutRegular)
                     {

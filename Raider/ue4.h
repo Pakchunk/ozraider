@@ -10,6 +10,8 @@ constexpr auto PI = 3.1415926535897932f;
 constexpr auto INV_PI = 0.31830988618f;
 constexpr auto HALF_PI = 1.57079632679f;
 
+typedef std::array<UFortWeaponRangedItemDefinition*, 6> PlayerLoadout; // Array of weapons for the player to equip.
+
 inline bool bTraveled = false;
 inline bool bPlayButton = false;
 inline bool bListening = false;
@@ -18,6 +20,8 @@ static bool bMapFullyLoaded = false;
 
 std::map<EFortTeam, bool> teamsmap;
 bool hasSetup = false;
+int PlayersJumpedFromBus = 0;
+int TimesInGame = 0;
 static std::unordered_set<ABuildingSMActor*> Buildings;
 std::vector<ABuildingSMActor*> PlayerBuilds;
 static AFortOnlineBeaconHost* HostBeacon = nullptr;
@@ -402,6 +406,7 @@ void Spectate(UNetConnection* SpectatingConnection, AFortPlayerStateAthena* Stat
     {
         DeadPC->PlayerToSpectateOnDeath = PawnToSpectate;
         DeadPC->ClientSetSpectatorCamera(PawnToSpectate->K2_GetActorLocation(), PawnToSpectate->K2_GetActorRotation());
+        //DeadPC->ServerSetSpectatorLocation(PawnToSpectate->K2_GetActorLocation(), PawnToSpectate->K2_GetActorRotation());
         DeadPC->SpectateOnDeath();
 
         DeadPlayerState->SpectatingTarget = StateToSpectate;
@@ -641,7 +646,7 @@ inline void EquipInventoryItem(AFortPlayerControllerAthena* PC, FGuid& Guid)
 
         if (CurrentItemInstance->GetItemGuid() == Guid && Def)
         {
-            EquipWeaponDefinition((APlayerPawn_Athena_C*)PC->Pawn, Def, Guid, -1, true); // CurrentItemInstance->ItemEntry.LoadedAmmo);
+            EquipWeaponDefinition((APlayerPawn_Athena_C*)PC->Pawn, Def, Guid); // CurrentItemInstance->ItemEntry.LoadedAmmo);
             break;
         }
     }
@@ -1063,6 +1068,8 @@ static void InitPawn(AFortPlayerControllerAthena* PlayerController, FVector Loc 
     Pawn->SetMaxHealth(100);
     Pawn->SetMaxShield(100);
     
+    Pawn->ShieldRegenGameplayEffect = nullptr;
+    Pawn->ShieldRegenDelayGameplayEffect = nullptr;
     Pawn->HealthRegenGameplayEffect = nullptr;
     Pawn->HealthRegenDelayGameplayEffect = nullptr;
 
@@ -1086,8 +1093,20 @@ static void InitPawn(AFortPlayerControllerAthena* PlayerController, FVector Loc 
         PlayerState->CharacterParts[(uint8_t)EFortCustomPartType::Body] = Body;
     }
 
+    for (int i = 0; i < PlayerController->WorldInventory->Inventory.ItemInstances.Num(); i++)
+    {
+        auto Instance = PlayerController->WorldInventory->Inventory.ItemInstances[i];
+        auto Definition = Instance->GetItemDefinitionBP();
 
-    //UpdateInventory(PlayerController);
+        if (Definition->GetName().starts_with("WID_") && Definition->Class->GetName() == "FortWeaponRangedItemDefinition")
+        {
+            auto Weapon = EquipWeaponDefinition(PlayerController->Pawn, (UFortWeaponItemDefinition*)Definition, Instance->ItemEntry.ItemGuid, -1, true);
+            Instance->ItemEntry.LoadedAmmo = Weapon->GetBulletsPerClip();
+        }
+        else
+            continue;
+    }
+    UpdateInventory(PlayerController);
 
     ApplyAbilities(Pawn);
 }
@@ -1124,7 +1143,7 @@ inline UFortWeaponRangedItemDefinition* FindWID(const std::string& WID)
     return Def;
 }
 
-void EquipLoadout(AFortPlayerControllerAthena* Controller, std::vector<UFortWeaponRangedItemDefinition*> WIDS)
+void EquipLoadout(AFortPlayerControllerAthena* Controller, PlayerLoadout WIDS)
 {
     FFortItemEntry pickaxeEntry;
 
@@ -1438,6 +1457,7 @@ namespace Inventory // includes quickbars
                             {
                                 auto Pickup = SummonPickup((AFortPlayerPawn*)Controller->Pawn, Definition, 1, Controller->Pawn->K2_GetActorLocation());
                                 Pickup->PrimaryPickupItemEntry.LoadedAmmo = Instance->GetLoadedAmmo();
+                                Pickup->OnRep_PrimaryPickupItemEntry();
                                 bWasSuccessful = true;
                                 break;
                             }

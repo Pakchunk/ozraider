@@ -34,7 +34,7 @@ public:
             //auto Entries = PC->WorldInventory->Inventory.ItemInstances;
             //if (bFound)
                 //EquipInventoryItem(PC, PickaxeEntry.ItemGuid);
-            static std::vector<UFortWeaponRangedItemDefinition*> HiderLoadout = 
+            static PlayerLoadout HiderLoadout = 
             {
                 (UFortWeaponRangedItemDefinition*)PC->WorldInventory->Inventory.ItemInstances[15]->ItemEntry.ItemDefinition,
                 nullptr,

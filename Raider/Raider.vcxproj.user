@@ -3,4 +3,15 @@
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommand>E:\3.5\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>-skippatchcheck -epicportal -HTTP=WinInet</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
+    <RemoteDebuggerCommand>E:\3.5\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe</RemoteDebuggerCommand>
+    <RemoteDebuggerCommandArguments>-skippatchcheck -epicportal -HTTP=WinInet</RemoteDebuggerCommandArguments>
+    <LocalDebuggerDebuggerType>NativeOnly</LocalDebuggerDebuggerType>
+    <LocalDebuggerMergeEnvironment>false</LocalDebuggerMergeEnvironment>
+    <LocalDebuggerWorkingDirectory />
+  </PropertyGroup>
 </Project>

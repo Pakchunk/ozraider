@@ -60,7 +60,7 @@ namespace Hooks
         if (!hasSetup)
         {
             hasSetup = true;
-            for (int i = 0; i < 104; i++)
+            for (int i = 2; i < 104; i++)
             {
                 teamsmap.insert_or_assign((EFortTeam)i, false);
             }
@@ -72,6 +72,7 @@ namespace Hooks
                 continue;
 
             teamsmap.insert_or_assign(team.first, true);
+
             return team.first;
         }
     }
@@ -96,6 +97,8 @@ namespace Hooks
 
         Pawn->SetMaxHealth(HEALTH);
         Pawn->SetMaxShield(SHIELD);
+        Pawn->ShieldRegenGameplayEffect = nullptr;
+        Pawn->ShieldRegenDelayGameplayEffect = nullptr;
         Pawn->HealthRegenGameplayEffect = nullptr;
         Pawn->HealthRegenDelayGameplayEffect = nullptr;
 
@@ -203,6 +206,7 @@ namespace Hooks
         static auto RandomPickaxe = FindWID(PickaxePool[rand() % PickaxePool.size()]);
         UFortWeaponRangedItemDefinition* Pickaxe;
         Pickaxe = bCosmetics ? RandomPickaxe : Default;
+        std::cout << Pickaxe->GetName() << ": Pickaxe\n";
 
         switch (loadoutToUse)
         {
@@ -213,16 +217,16 @@ namespace Hooks
                 static auto Shotgun = FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03");
                 static auto SMG = FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03");
                 static auto Rifle = FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03");
-                static auto Sniper = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
-                static auto Consumable = FindWID("Athena_PurpleStuff");
-                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                //static auto Sniper = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
+                //static auto Consumable = FindWID("Athena_PurpleStuff");
+                PlayerLoadout FortLoadout = 
                 {
                     Pickaxe,
-                    Shotgun,
-                    SMG,
-                    Rifle,
-                    Sniper,
-                    Consumable
+                    Game::Shotguns[rand() % Game::Shotguns.size()],
+                    Game::SMGs[rand() % Game::SMGs.size()],
+                    Game::Rifles[rand() % Game::Rifles.size()],
+                    Game::FunConsumables[rand() % Game::FunConsumables.size()],
+                    Game::Heals[rand() % Game::Heals.size()]
                 };
 
                 EquipLoadout(PlayerController, FortLoadout);
@@ -235,7 +239,7 @@ namespace Hooks
                 static auto GrenadeLauncher = FindWID("WID_Launcher_Grenade_Athena_SR_Ore_T03");
                 static auto C4 = FindWID("Athena_C4");
                 static auto Consumable = FindWID("Athena_PurpleStuff");
-                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                PlayerLoadout FortLoadout = 
                 {
                     Pickaxe,
                     Rocket1,
@@ -254,7 +258,7 @@ namespace Hooks
                 static auto Hunting = FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03");
                 static auto Crossbow = FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03");
                 static auto Consumable = FindWID("Athena_PurpleStuff");
-                std::vector<UFortWeaponRangedItemDefinition*> FortLoadout = 
+                PlayerLoadout FortLoadout = 
                 {
                     Pickaxe,
                     BoltAction,
@@ -289,6 +293,8 @@ namespace Hooks
             ApplyAbilities(Pawn);
 
         auto Drone = (ABP_VictoryDrone_C*)SpawnActor(ABP_VictoryDrone_C::StaticClass(), Pawn->K2_GetActorLocation());
+        Drone->Owner = nullptr;
+        Drone->OnRep_Owner();
         Drone->TriggerPlayerSpawnEffects();
 
         return PlayerController;
@@ -449,6 +455,7 @@ namespace Hooks
 
                 InitNetworkHooks();
                 printf("[InitNetworkHooks] Done\n");
+                TimesInGame++;
             }
         }
 
@@ -484,6 +491,7 @@ namespace Hooks
             bPlayground = false;
             bStormPaused = false;
             bSafeZoneBased = false;
+            PlayersJumpedFromBus = 0;
             ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = false;
             SpectatorConnection = nullptr;
             ToSpectatePlayerState = nullptr;
@@ -501,13 +509,18 @@ namespace Hooks
 
         if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerPlayEmoteItem")
         {
+            return;
             auto Params = (AFortPlayerController_ServerPlayEmoteItem_Params*)Parameters;
             auto PC = (AFortPlayerControllerAthena*)Object;
             auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
 
-            /*
             auto FortAnimInstance = static_cast<UFortAnimInstance*>(Pawn->Mesh->GetAnimInstance());
-
+            auto Montage = Params->EmoteAsset->GetAnimationHardReference(Pawn->CharacterBodyType, Pawn->CharacterGender);
+            if (FortAnimInstance)
+            {
+                Pawn->OnMontageStarted(Montage);
+            }
+            /*
             if (!FortAnimInstance->bIsJumping && !FortAnimInstance->bIsFalling && !PC->bIsPlayerActivelyMoving)
             {
                 if (Pawn->bIsCrouched)
@@ -519,6 +532,7 @@ namespace Hooks
                 auto AnimInstance = (UFortPlayerAnimInstance*)Pawn->Mesh->GetAnimInstance();
                 PC->PlayEmoteItem(EmoteAsset);
                 AnimInstance->Montage_Play(Montage, 1, EMontagePlayReturnType::Duration, 0, true);
+                Pawn->OnMontageStarted(Montage);
                 Pawn->RepAnimMontageInfo.AnimMontage = Montage;
                 Pawn->RepAnimMontageInfo.PlayRate = 1;
                 Pawn->OnRep_ReplicatedAnimMontage();
@@ -534,11 +548,17 @@ namespace Hooks
             if (!bPlayground)
             {
                 auto drone = (ABP_VictoryDrone_C*)Object;
-                if (Object->IsA(ABP_VictoryDrone_C::StaticClass()))
-                    drone->K2_DestroyActor();
 
-                if (SpectatorConnection && ToSpectatePlayerState)
-                    Spectate(SpectatorConnection, ToSpectatePlayerState);
+                if (drone->Owner != nullptr && drone->PlayerState != nullptr)
+                {
+                    if (((AFortPlayerControllerAthena*)drone->Owner)->Pawn)
+                        ((AFortPlayerControllerAthena*)drone->Owner)->Pawn->K2_DestroyActor();
+
+                    if (((AFortPlayerControllerAthena*)drone->Owner)->NetConnection && ((AFortPlayerControllerAthena*)drone->PlayerState->Owner)->Pawn)
+                        Spectate(((AFortPlayerControllerAthena*)drone->Owner)->NetConnection, (AFortPlayerStateAthena*)drone->PlayerState);
+                }
+                
+                drone->K2_DestroyActor();
             }
             else
             {
@@ -557,12 +577,72 @@ namespace Hooks
             }
         }
 
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerAttemptInteract" && bLooting)
+        {
+            auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
+            //std::cout << "\n\n" << Params->ReceivingActor->GetName() << "\n" << Params->ReceivingActor->StaticClass()->GetFullName() << "\n\n"; \
+            \
+            code lowkey needs cleanup + improvements \
+            todo: ammo count logic 
+            if (Params->ReceivingActor->GetFullName().find("Tiered_Chest_6_Parent_C") != std::string::npos)
+            {
+                auto Container = (ABuildingContainer*)Params->ReceivingActor;
+                Container->bAlreadySearched = true;
+                Container->bStartAlreadySearched_Athena = true;
+                Container->OnRep_bAlreadySearched();
+                auto Loot = Game::GetWeaponLoot();
+                SummonPickup(nullptr, Loot, 1, Container->K2_GetActorLocation());
+                SummonPickup(nullptr, Loot->GetAmmoWorldItemDefinition_BP(), 1, Container->K2_GetActorLocation());
+                SummonPickup(nullptr, Game::GetRandomMaterial(), 30, Container->K2_GetActorLocation());
+            }
+            if (Params->ReceivingActor->GetFullName().find("Tiered_Short_Ammo_3_Parent_C") != std::string::npos)
+            {
+                auto Container = (ABuildingContainer*)Params->ReceivingActor;
+                Container->bAlreadySearched = true;
+                Container->bStartAlreadySearched_Athena = true;
+                Container->OnRep_bAlreadySearched();
+                auto Loot = Game::GetWeaponLoot()->GetAmmoWorldItemDefinition_BP();
+                SummonPickupFromChest(Loot, 30, Container->K2_GetActorLocation());
+            }
+            if (Params->ReceivingActor->GetFullName().find("AthenaSupplyDrop") != std::string::npos)
+            {
+                auto Container = (ABuildingContainer*)Params->ReceivingActor;
+                Container->bAlreadySearched = true;
+                Container->bStartAlreadySearched_Athena = true;
+                Container->OnRep_bAlreadySearched();
+                auto Loot = Game::GetSupplyDropLoot();
+                SummonPickup(nullptr, Loot, 1, Container->K2_GetActorLocation());
+                SummonPickup(nullptr, Loot->GetAmmoWorldItemDefinition_BP(), 1, Container->K2_GetActorLocation());
+                SummonPickup(nullptr, Game::GetRandomMaterial(), 100, Container->K2_GetActorLocation());
+            }
+            // this one is just for funsies take it out if u want
+            if (Params->ReceivingActor->GetFullName().find("Prop_QuestInteractable_GniceGnome") != std::string::npos)
+            {
+                KickController((APlayerController*)Object, L"dont fuck with the gnome");
+            }
+        }
+
         if (Function->GetFullName() == "Function SafeZoneIndicator.SafeZoneIndicator_C.OnSafeZoneStateChange" && bSafeZoneBased)
         {
             auto Indicator = (ASafeZoneIndicator_C*)Object;
             auto SafeZonePhase = ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase;
             Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
             //std::cout << "SafeZonePhase: " << SafeZonePhase << "\n";
+            switch (SafeZonePhase)
+            {
+            case 0:
+
+                Indicator->Radius = 15000;
+                Indicator->NextRadius = 450;
+                break;
+            case 1:
+                Indicator->NextRadius = 450;
+                break;
+            default:
+                Indicator->NextRadius = 50;
+                break;
+            }
+            /*
             switch (SafeZonePhase)
             {
             case 0:
@@ -583,28 +663,46 @@ namespace Hooks
                 Indicator->NextRadius = 500;
                 break;
             default:
+                GameState->GamePhase = EAthenaGamePhase::EndGame;
+                GameState->OnRep_GamePhase(EAthenaGamePhase::SafeZones);
                 Indicator->NextRadius = 50;
                 break;
             }
+            */
         }
 
-        if (Function->GetFullName() == "Function PlayerPawn_Athena.PlayerPawn_Athena_C.GameplayCue.Athena.OutsideSafeZone" && bSafeZoneBased)
+        // Loot on death: i dont have time to fix this, it works but it only drops ur consumables
+        /*
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied" && bStartedBus && !bPlayground && !bHideAndSeek)
         {
-            // TODO: somehow find a better way to do this, or fix how the player gets damaged when the zone is created
-            if (((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase > 0)
-                ((APlayerPawn_Athena_C*)Object)->SetHealth(((APlayerPawn_Athena_C*)Object)->GetHealth() - 2);
-        }
+            auto Params = static_cast<AFortPlayerControllerZone_ClientOnPawnDied_Params*>(Parameters);
+            auto DeadPC = (AFortPlayerControllerAthena*)Object;
 
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied")
+            for (int i = 0; i < DeadPC->WorldInventory->Inventory.ItemInstances.Num(); i++)
+            {
+                auto Definition = DeadPC->WorldInventory->Inventory.ItemInstances[i]->GetItemDefinitionBP();
+                if (!Definition->GetName().starts_with("WID_") && Definition->Class->GetName() == "FortWeaponRangedItemDefinition")
+                {
+                    auto Pickup = SummonPickup((AFortPlayerPawn*)DeadPC->Pawn, Definition, 1, DeadPC->Pawn->K2_GetActorLocation());
+                    Pickup->PrimaryPickupItemEntry.LoadedAmmo = DeadPC->WorldInventory->Inventory.ItemInstances[i]->ItemEntry.LoadedAmmo;
+                    Pickup->OnRep_PrimaryPickupItemEntry();
+                }
+            }
+
+            if (DeadPC->QuickBars)
+                DeadPC->QuickBars->K2_DestroyActor();
+        }
+        */
+
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied" && bStartedBus)
         {
             auto Params = static_cast<AFortPlayerControllerZone_ClientOnPawnDied_Params*>(Parameters);
             auto DeadPC = (AFortPlayerControllerAthena*)Object;
             auto DeadPlayerState = (AFortPlayerStateAthena*)DeadPC->PlayerState;
-            bool IsKiller;
 
-            if (DeadPC && Params)
+            if (DeadPC && DeadPC->NetConnection && Params)
             {
-                IsKiller = Params->DeathReport.KillerPlayerState ? true : false;
+                bool IsKiller = Params->DeathReport.KillerPlayerState ? true : false;
                 auto KillerPawn = Params->DeathReport.KillerPawn;
                 auto KillerPlayerState = (AFortPlayerStateAthena*)Params->DeathReport.KillerPlayerState;
 
@@ -618,6 +716,8 @@ namespace Hooks
                 auto Drone = SpawnActor(ABP_VictoryDrone_C::StaticClass(), DeadPawnLocation);
                 Drone->Owner = DeadPC;
                 Drone->OnRep_Owner();
+                ((ABP_VictoryDrone_C*)Drone)->PlayerState = IsKiller ? Params->DeathReport.KillerPlayerState : nullptr;
+                ((ABP_VictoryDrone_C*)Drone)->OnRep_PlayerState();
 
                 /*
                 if (!bPlayground)
