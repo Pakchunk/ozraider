@@ -2,6 +2,7 @@
 
 #include "gui.h"
 #include "ufunctionhooks.h"
+#include "inireader.h"
 
 // #define LOGGING
 #define HEALTH 100
@@ -53,8 +54,59 @@ namespace Hooks
         Native::World::NotifyControlMessage(GetWorld(), Connection, MessageType, Bunch);
     }
 
+    void* OnReloadHook(AFortWeapon* a1, int a2)// cr: averymadness
+    {
+        if (!bInfiniteAmmo)
+        {
+            auto Pawn = (AFortPlayerPawnAthena*)a1->GetOwner();
+            auto PlayerController = (AFortPlayerControllerAthena*)Pawn->Controller;
+
+            bool Successful = true;
+
+            if (a1 && Successful)
+            {
+                auto AmmoDef = a1->WeaponData->GetAmmoWorldItemDefinition_BP();
+
+                if (!AmmoDef || a1->WeaponData->GetName().find("TID") != -1)
+                    AmmoDef = a1->WeaponData;
+
+                auto Inventory = PlayerController->WorldInventory;
+
+                auto ReplicatedEntries = Inventory->Inventory.ReplicatedEntries;
+                auto ItemInstances = Inventory->Inventory.ItemInstances;
+
+                for (int i = 0; i < Inventory->Inventory.ReplicatedEntries.Num(); i++)
+                {
+                    if (Inventory->Inventory.ReplicatedEntries[i].ItemDefinition == AmmoDef)
+                    {
+                        Inventory->Inventory.ReplicatedEntries[i].Count -= a2;
+                        Inventory->Inventory.ReplicatedEntries[i].ReplicationKey++;
+
+                        if (Inventory->Inventory.ReplicatedEntries[i].Count <= 0)
+                        {
+                            Inventory->Inventory.ReplicatedEntries.RemoveSingle(i);
+
+                            for (int j = 0; j < ItemInstances.Num(); j++)
+                            {
+                                auto ItemInstance = ItemInstances[j];
+
+                                if (ItemInstance && ItemInstance->GetItemDefinitionBP() == AmmoDef)
+                                {
+                                    ItemInstances.RemoveSingle(i);
+                                }
+                            }
+                        }
+
+                        Inventory::Update(PlayerController, 0, true);
+                    }
+                }
+            }
+        }
+
+        Native::Fort::OnReload(a1, a2);
+    }
+
     // eliminates the chance of two players being on the same team randomly.
-    // TODO: Sort STW teams from PvP teams.
     auto ApplyTeam()
     {
         if (!hasSetup)
@@ -83,8 +135,6 @@ namespace Hooks
         NewPlayer->PlayerController = PlayerController;
 
         auto PlayerState = (AFortPlayerStateAthena*)PlayerController->PlayerState;
-
-        InitInventory(PlayerController, true);
 
         auto Pawn = (APlayerPawn_Athena_C*)SpawnActorTrans(APlayerPawn_Athena_C::StaticClass(), GetPlayerStart(PlayerController), PlayerController);
 
@@ -142,7 +192,7 @@ namespace Hooks
                 }
                 else
                 {
-                    UFortHeroType* HeroType = Hero->GetHeroTypeBP(); // UObject::FindObject<UFortHeroType>("FortHeroType HID_Outlander_015_F_V1_SR_T04.HID_Outlander_015_F_V1_SR_T04");
+                    UFortHeroType* HeroType = Hero->GetHeroTypeBP();
                     PlayerState->HeroType = HeroType;
                     PlayerState->OnRep_HeroType();
 
@@ -156,77 +206,54 @@ namespace Hooks
             }
         }
 
-        static std::vector<std::string> PickaxePool = 
-        {
-            "WID_Harvest_Pickaxe_Prismatic",
-            "WID_Harvest_Pickaxe_Anchor_Athena",
-            "WID_Harvest_Pickaxe_ArtDeco",
-            "WID_Harvest_Pickaxe_Assassin",
-            "WID_Harvest_Pickaxe_Assassin",
-            "WID_Harvest_Pickaxe_BoltOn_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Brite",
-            "WID_Harvest_Pickaxe_Carrot",
-            "WID_Harvest_Pickaxe_CircuitBreaker",
-            "WID_Harvest_Pickaxe_CuChulainn",
-            "WID_Harvest_Pickaxe_Deathvalley_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Disco_Athena",
-            "WID_Harvest_Pickaxe_District_Athena",
-            "WID_Harvest_Pickaxe_Dragon",
-            "WID_Harvest_Pickaxe_Flamingo_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Heart_Athena",
-            "WID_Harvest_Pickaxe_HolidayCandyCane_Athena",
-            "WID_Harvest_Pickaxe_HolidayGiftWrap_Athena",
-            "WID_Harvest_Pickaxe_IcePick_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Keg_Athena",
-            "WID_Harvest_Pickaxe_Lockjaw_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Medieval_Athena",
-            "WID_Harvest_Pickaxe_Megalodon_Athena",
-            "WID_Harvest_Pickaxe_PajamaParty",
-            "WID_Harvest_Pickaxe_Pizza",
-            "WID_Harvest_Pickaxe_Plunger",
-            "WID_Harvest_Pickaxe_PotOfGold",
-            "WID_Harvest_Pickaxe_RockerPunk",
-            "WID_Harvest_Pickaxe_Scavenger",
-            "WID_Harvest_Pickaxe_Shark_Athena",
-            "WID_Harvest_Pickaxe_SickleBat_Athena_C_T01",
-            "WID_Harvest_Pickaxe_SkiBoot",
-            "WID_Harvest_Pickaxe_Smiley_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Space",
-            "WID_Harvest_Pickaxe_Spikey_Athena_C_T01",
-            "WID_Harvest_Pickaxe_Squeak",
-            "WID_Harvest_Pickaxe_Stealth",
-            "WID_Harvest_Pickaxe_Tactical",
-            "WID_Harvest_Pickaxe_TacticalBlack",
-            "WID_Harvest_Pickaxe_TacticalUrban",
-            "WID_Harvest_Pickaxe_Teslacoil_Athena",
-            "WID_Harvest_Pickaxe_WinterCamo_Athena"
-        };
-
+        Looting::ShuffleItems();
         static auto Default = FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
-        static auto RandomPickaxe = FindWID(PickaxePool[rand() % PickaxePool.size()]);
+        auto RandomPickaxe = (UFortWeaponRangedItemDefinition*)Looting::PickaxePool[GetMath()->STATIC_RandomInteger(Looting::PickaxePool.size())];
         UFortWeaponRangedItemDefinition* Pickaxe;
-        Pickaxe = bCosmetics ? RandomPickaxe : Default;
-        std::cout << Pickaxe->GetName() << ": Pickaxe\n";
+        Pickaxe = bCosmetics ? Default : RandomPickaxe;
+        LOG_INFO("Player Pickaxe: {}", Pickaxe->GetName());
 
         switch (loadoutToUse)
         {
-            case WeaponLoadout::REGULAR:
+            case WeaponLoadout::NONE:
             {
-                // EXPLANATION: For choice between default pickaxe/cosmetic pickaxes to work, the vector must not be static, so then we make the WEAPONS static and not the vector.
-
-                static auto Shotgun = FindWID("WID_Shotgun_Standard_Athena_UC_Ore_T03");
-                static auto SMG = FindWID("WID_Pistol_AutoHeavy_Athena_R_Ore_T03");
-                static auto Rifle = FindWID("WID_Assault_AutoHigh_Athena_SR_Ore_T03");
-                //static auto Sniper = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
-                //static auto Consumable = FindWID("Athena_PurpleStuff");
+                InitInventory(PlayerController, false);
+                EquipLoadout(PlayerController, { Pickaxe });
+                break;
+            }
+            case WeaponLoadout::RANDOM:
+            {
+                InitInventory(PlayerController, true);
                 PlayerLoadout FortLoadout = 
                 {
                     Pickaxe,
-                    Game::Shotguns[rand() % Game::Shotguns.size()],
-                    Game::SMGs[rand() % Game::SMGs.size()],
-                    Game::Rifles[rand() % Game::Rifles.size()],
-                    Game::FunConsumables[rand() % Game::FunConsumables.size()],
-                    Game::Heals[rand() % Game::Heals.size()]
+                    Looting::ShotgunPool[GetMath()->STATIC_RandomInteger(Looting::ShotgunPool.size())],
+                    Looting::SMGPool[GetMath()->STATIC_RandomInteger(Looting::SMGPool.size())],
+                    Looting::AssaultPool[GetMath()->STATIC_RandomInteger(Looting::AssaultPool.size())],
+                    Looting::GetRandomConsumable(),
+                    Looting::GetRandomConsumable()
+                };
+
+                EquipLoadout(PlayerController, FortLoadout);
+                break;
+            }
+            case WeaponLoadout::INI:
+            {
+                InitInventory(PlayerController, true);
+                auto Ini = Utils::Ini();
+                auto Slot2 = FindWID(Ini.Get("Inventory", "Slot2", "nullptr"), false);
+                auto Slot3 = FindWID(Ini.Get("Inventory", "Slot3", "nullptr"), false);
+                auto Slot4 = FindWID(Ini.Get("Inventory", "Slot4", "nullptr"), false);
+                auto Slot5 = FindWID(Ini.Get("Inventory", "Slot5", "nullptr"), false);
+                auto Slot6 = FindWID(Ini.Get("Inventory", "Slot6", "nullptr"), false);
+                PlayerLoadout FortLoadout = 
+                {
+                    Pickaxe,
+                    Slot2,
+                    Slot3,
+                    Slot4,
+                    Slot5,
+                    Slot6
                 };
 
                 EquipLoadout(PlayerController, FortLoadout);
@@ -234,11 +261,12 @@ namespace Hooks
             }
             case WeaponLoadout::EXPLOSIVES:
             {
+                InitInventory(PlayerController, true);
                 static auto Rocket1 = FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03");
                 static auto Rocket2 = FindWID("WID_Launcher_Rocket_Athena_R_Ore_T03");
                 static auto GrenadeLauncher = FindWID("WID_Launcher_Grenade_Athena_SR_Ore_T03");
-                static auto C4 = FindWID("Athena_C4");
-                static auto Consumable = FindWID("Athena_PurpleStuff");
+                static auto C4 = FindWID("Athena_C4", false);
+                static auto Consumable = FindWID("Athena_PurpleStuff", false);
                 PlayerLoadout FortLoadout = 
                 {
                     Pickaxe,
@@ -253,11 +281,12 @@ namespace Hooks
             }
             case WeaponLoadout::SNIPERS:
             {
+                InitInventory(PlayerController, true);
                 static auto BoltAction = FindWID("WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03");
                 static auto Automatic = FindWID("WID_Sniper_Standard_Scope_Athena_SR_Ore_T03");
                 static auto Hunting = FindWID("WID_Sniper_NoScope_Athena_R_Ore_T03");
                 static auto Crossbow = FindWID("WID_Sniper_Crossbow_Athena_VR_Ore_T03");
-                static auto Consumable = FindWID("Athena_PurpleStuff");
+                static auto Consumable = FindWID("Athena_PurpleStuff", false);
                 PlayerLoadout FortLoadout = 
                 {
                     Pickaxe,
@@ -271,23 +300,26 @@ namespace Hooks
                 break;
             }
         }
+        PlayerController->OverriddenBackpackSize = 100;
 
         auto CheatManager = CreateCheatManager(PlayerController);
-        CheatManager->ToggleInfiniteAmmo();
-        CheatManager->ToggleInfiniteDurability();
-        if (reinterpret_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase == EAthenaGamePhase::Warmup)
-            CheatManager->God();
+        if (bInfiniteAmmo)
+        {
+            CheatManager->ToggleInfiniteAmmo();
+            CheatManager->ToggleInfiniteDurability();
+        }
+
+        if (!bStartedBus)
+            Pawn->HealthSet->Health.Minimum = 100;
 
         if (PlayerController->Pawn)
         {
             if (PlayerController->Pawn->PlayerState)
             {
-                PlayerState->TeamIndex = ApplyTeam(); //EFortTeam(rand() % 101);
+                PlayerState->TeamIndex = ApplyTeam();
                 PlayerState->OnRep_PlayerTeam();
             }
         }
-
-        PlayerController->OverriddenBackpackSize = 100;
 
         if (Pawn && Pawn->AbilitySystemComponent)
             ApplyAbilities(Pawn);
@@ -302,14 +334,14 @@ namespace Hooks
 
     void Beacon_NotifyControlMessage(AOnlineBeaconHost* Beacon, UNetConnection* Connection, uint8 MessageType, int64* Bunch)
     {
-        if (((AAthena_GameState_C*)GetWorld()->GameState)->GamePhase != EAthenaGamePhase::Warmup && !bPlayground)
+        if (bStartedBus && !bPlayground)
         {
             KickController(Connection->PlayerController, L"Game has already started.");
-            printf("LogRaider: Player tried to join, but cannot because the game has already started.\n");
+            LOG_INFO("[LogRaider] {} tried to join, but cannot because the game has already started.", "");
             return;
         }
 
-        printf("Recieved control message %i\n", MessageType);
+        //printf("Recieved control message %i\n", MessageType);
 
         switch (MessageType)
         {
@@ -329,6 +361,8 @@ namespace Hooks
 
             Bunch[7] -= (16 * 1024 * 1024);
 
+            auto name = Utils::DelimiterParse(Utils::DelimiterParse(Connection->RequestURL.ToString(), "?")[1], "=")[1];
+            LOG_INFO("[LogRaider] Recieved connection from user: '{}', player is now joining.", name);
             Native::World::WelcomePlayer(GetWorld(), Connection);
 			
             return;
@@ -361,7 +395,7 @@ namespace Hooks
         ZeroGUI::SetupCanvas(Canvas);
         GUI::Tick();
 
-        return Native::GameViewportClient::PostRender(_this, Canvas);
+        Native::GameViewportClient::PostRender(_this, Canvas);
     }
 
     __int64 CollectGarbage(__int64 a1)
@@ -380,6 +414,7 @@ namespace Hooks
         DetourAttachE(Native::OnlineSession::KickPlayer, KickPlayer);
         DetourAttachE(Native::GameViewportClient::PostRender, PostRender);
         DetourAttachE(Native::GC::CollectGarbage, CollectGarbage);
+        DetourAttachE(Native::Fort::OnReload, OnReloadHook);
         DETOUR_END
     }
 
@@ -395,15 +430,6 @@ namespace Hooks
         DetourDetachE(Native::GameViewportClient::PostRender, PostRender);
         DetourDetachE(Native::GC::CollectGarbage, CollectGarbage);
         DETOUR_END
-    }
-
-    UNetConnection* SpectatorConnection;
-    AFortPlayerStateAthena* ToSpectatePlayerState;
-
-    auto UpdateSpecvars(UNetConnection* NetConnection, AFortPlayerStateAthena* PlayerState)
-    {
-        SpectatorConnection = NetConnection;
-        ToSpectatePlayerState = PlayerState;
     }
 
     auto GetDeathReason(FFortPlayerDeathReport DeathReport)
@@ -451,10 +477,10 @@ namespace Hooks
             {
                 bPlayButton = true;
                 Game::Start();
-                printf("[Game::Start] Done\n");
+                LOG_INFO("[Game::Start] Done");
 
                 InitNetworkHooks();
-                printf("[InitNetworkHooks] Done\n");
+                LOG_INFO("[InitNetworkHooks] Done");
                 TimesInGame++;
             }
         }
@@ -481,7 +507,10 @@ namespace Hooks
             bStartedBus = false;
             HostBeacon = nullptr;
             bCosmetics = true;
-            bLoadoutRegular = true;
+            bInfiniteAmmo = true;
+            bLooting = false;
+            bLoadoutRandom = false;
+            bLoadoutIni = false;
             bLoadoutExplosives = false;
             bLoadoutSnipers = false;
             bBusOnLocations = false;
@@ -493,8 +522,8 @@ namespace Hooks
             bSafeZoneBased = false;
             PlayersJumpedFromBus = 0;
             ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = false;
-            SpectatorConnection = nullptr;
-            ToSpectatePlayerState = nullptr;
+            //SpectatorConnection = nullptr;
+            //ToSpectatePlayerState = nullptr;
             PlayerBuilds.clear();
             for (auto team : teamsmap)
             {
@@ -507,39 +536,36 @@ namespace Hooks
             GetKismetSystem()->STATIC_ExecuteConsoleCommand(GetWorld(), L"open frontend", GetPlayerController());
         }
 
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerPlayEmoteItem")
+        // ignore attempt at emote for new loadout
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerPlayEmoteItem" && !bStartedBus && loadoutToUse == WeaponLoadout::RANDOM)
         {
             return;
-            auto Params = (AFortPlayerController_ServerPlayEmoteItem_Params*)Parameters;
+            //auto Params = (AFortPlayerController_ServerPlayEmoteItem_Params*)Parameters;
             auto PC = (AFortPlayerControllerAthena*)Object;
-            auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
+            auto Inventory = PC->WorldInventory->Inventory;
 
-            auto FortAnimInstance = static_cast<UFortAnimInstance*>(Pawn->Mesh->GetAnimInstance());
-            auto Montage = Params->EmoteAsset->GetAnimationHardReference(Pawn->CharacterBodyType, Pawn->CharacterGender);
-            if (FortAnimInstance)
+            if (PC && PC->WorldInventory)
             {
-                Pawn->OnMontageStarted(Montage);
-            }
-            /*
-            if (!FortAnimInstance->bIsJumping && !FortAnimInstance->bIsFalling && !PC->bIsPlayerActivelyMoving)
-            {
-                if (Pawn->bIsCrouched)
-                    Pawn->UnCrouch(true);
+                for (int i = 0; i < Inventory.ItemInstances.Num(); i++)
+                    Inventory.ItemInstances.RemoveAt(i);
+                for (int i = 0; i < Inventory.ReplicatedEntries.Num(); i++)
+                    Inventory.ReplicatedEntries.RemoveAt(i);
 
-                auto EmoteAsset = static_cast<AFortPlayerController_ServerPlayEmoteItem_Params*>(Params)->EmoteAsset;
-                auto Montage = EmoteAsset->GetAnimationHardReference(EFortCustomBodyType::All, EFortCustomGender::Both);
-                
-                auto AnimInstance = (UFortPlayerAnimInstance*)Pawn->Mesh->GetAnimInstance();
-                PC->PlayEmoteItem(EmoteAsset);
-                AnimInstance->Montage_Play(Montage, 1, EMontagePlayReturnType::Duration, 0, true);
-                Pawn->OnMontageStarted(Montage);
-                Pawn->RepAnimMontageInfo.AnimMontage = Montage;
-                Pawn->RepAnimMontageInfo.PlayRate = 1;
-                Pawn->OnRep_ReplicatedAnimMontage();
-                Pawn->ForceNetUpdate();
-                
+                //Inventory::Update(PC, 0, true);
+                PC->QuickBars->K2_DestroyActor();
+                Looting::ShuffleItems();
+                InitInventory(PC, false);
+                PlayerLoadout FortLoadout = {
+                    (UFortWeaponRangedItemDefinition*)Looting::PickaxePool[GetMath()->STATIC_RandomInteger(Looting::PickaxePool.size())],
+                    Looting::ShotgunPool[GetMath()->STATIC_RandomInteger(Looting::ShotgunPool.size())],
+                    Looting::SMGPool[GetMath()->STATIC_RandomInteger(Looting::SMGPool.size())],
+                    Looting::AssaultPool[GetMath()->STATIC_RandomInteger(Looting::AssaultPool.size())],
+                    Looting::GetRandomConsumable(),
+                    Looting::GetRandomConsumable()
+                };
+
+                EquipLoadout(PC, FortLoadout);
             }
-            */
         }
 
 
@@ -577,7 +603,7 @@ namespace Hooks
             }
         }
 
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerAttemptInteract" && bLooting)
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerAttemptInteract" && bLooting && bStartedBus && !bHideAndSeek)
         {
             auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
             //std::cout << "\n\n" << Params->ReceivingActor->GetName() << "\n" << Params->ReceivingActor->StaticClass()->GetFullName() << "\n\n"; \
@@ -590,10 +616,26 @@ namespace Hooks
                 Container->bAlreadySearched = true;
                 Container->bStartAlreadySearched_Athena = true;
                 Container->OnRep_bAlreadySearched();
-                auto Loot = Game::GetWeaponLoot();
-                SummonPickup(nullptr, Loot, 1, Container->K2_GetActorLocation());
-                SummonPickup(nullptr, Loot->GetAmmoWorldItemDefinition_BP(), 1, Container->K2_GetActorLocation());
-                SummonPickup(nullptr, Game::GetRandomMaterial(), 30, Container->K2_GetActorLocation());
+                auto LootArray = Looting::GetChestLoot();
+
+                for (int i = 0; i < LootArray.Num(); i++)
+                {
+                    int Count = 1;
+                    if (LootArray[i]->IsA(UFortAmmoItemDefinition::StaticClass()))
+                        Count = ((UFortAmmoItemDefinition*)LootArray[i])->DropCount;
+                    if (LootArray[i]->IsA(UFortResourceItemDefinition::StaticClass()))
+                        Count = 30;
+
+                    auto Pickup = SummonPickup(nullptr, LootArray[i], Count, Container->K2_GetActorLocation());
+                    //LOG_INFO("{}", ((UFortWeaponItemDefinition*)Pickup->PrimaryPickupItemEntry.ItemDefinition)->GetWeaponActorClass()->GetName());
+                    if (Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()))
+                    {
+                        auto WeaponWid = (UFortWeaponItemDefinition*)Pickup->PrimaryPickupItemEntry.ItemDefinition;
+                        auto ActorClass = (AFortWeapon*)WeaponWid->GetWeaponActorClass();
+
+                        Pickup->PrimaryPickupItemEntry.LoadedAmmo = ActorClass->GetBulletsPerClip();
+                    }
+                }
             }
             if (Params->ReceivingActor->GetFullName().find("Tiered_Short_Ammo_3_Parent_C") != std::string::npos)
             {
@@ -601,8 +643,10 @@ namespace Hooks
                 Container->bAlreadySearched = true;
                 Container->bStartAlreadySearched_Athena = true;
                 Container->OnRep_bAlreadySearched();
-                auto Loot = Game::GetWeaponLoot()->GetAmmoWorldItemDefinition_BP();
-                SummonPickupFromChest(Loot, 30, Container->K2_GetActorLocation());
+                auto AmmoArray = Looting::GetAmmoBoxLoot();
+                for (int i = 0; i < AmmoArray.Num(); i++)
+                    SummonPickup(nullptr, AmmoArray[i], AmmoArray[i]->DropCount, Container->K2_GetActorLocation());
+                AmmoArray.FreeArray();
             }
             if (Params->ReceivingActor->GetFullName().find("AthenaSupplyDrop") != std::string::npos)
             {
@@ -610,10 +654,17 @@ namespace Hooks
                 Container->bAlreadySearched = true;
                 Container->bStartAlreadySearched_Athena = true;
                 Container->OnRep_bAlreadySearched();
-                auto Loot = Game::GetSupplyDropLoot();
-                SummonPickup(nullptr, Loot, 1, Container->K2_GetActorLocation());
-                SummonPickup(nullptr, Loot->GetAmmoWorldItemDefinition_BP(), 1, Container->K2_GetActorLocation());
-                SummonPickup(nullptr, Game::GetRandomMaterial(), 100, Container->K2_GetActorLocation());
+                auto LootArray = Looting::GetSupplyDropLoot();
+                for (int i = 0; i < LootArray.Num(); i++)
+                {
+                    int Count = 1;
+                    if (LootArray[i]->IsA(UFortAmmoItemDefinition::StaticClass()))
+                        Count = ((UFortAmmoItemDefinition*)LootArray[i])->DropCount;
+                    if (LootArray[i]->IsA(UFortResourceItemDefinition::StaticClass()))
+                        Count = 100;
+
+                    SummonPickup(nullptr, LootArray[i], Count, Container->K2_GetActorLocation());
+                }
             }
             // this one is just for funsies take it out if u want
             if (Params->ReceivingActor->GetFullName().find("Prop_QuestInteractable_GniceGnome") != std::string::npos)
@@ -622,12 +673,34 @@ namespace Hooks
             }
         }
 
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied" && bLooting && bStartedBus && !bPlayground && !bHideAndSeek)
+        {
+            auto Params = static_cast<AFortPlayerControllerZone_ClientOnPawnDied_Params*>(Parameters);
+            auto DeadPC = (AFortPlayerControllerAthena*)Object;
+
+            for (int i = 0; i < DeadPC->WorldInventory->Inventory.ItemInstances.Num(); i++)
+            {
+                auto Definition = DeadPC->WorldInventory->Inventory.ItemInstances[i]->GetItemDefinitionBP();
+                std::cout << Definition->Class->GetName() << "\n";
+                if (Definition->Class->GetName().find("FortEditToolItemDefinition") != -1 || Definition->Class->GetName().find("FortWeaponMeleeItemDefinition") != -1 || Definition->Class->GetName().find("FortBuildingItemDefinition") != -1)
+                    continue;
+
+                auto Pickup = SummonPickup((AFortPlayerPawn*)DeadPC->Pawn, Definition, 1, DeadPC->Pawn->K2_GetActorLocation());
+                Pickup->PrimaryPickupItemEntry.LoadedAmmo = DeadPC->WorldInventory->Inventory.ItemInstances[i]->ItemEntry.LoadedAmmo;
+                Pickup->OnRep_PrimaryPickupItemEntry();
+            }
+
+            if (DeadPC->QuickBars)
+                DeadPC->QuickBars->K2_DestroyActor();
+        }
+
         if (Function->GetFullName() == "Function SafeZoneIndicator.SafeZoneIndicator_C.OnSafeZoneStateChange" && bSafeZoneBased)
         {
             auto Indicator = (ASafeZoneIndicator_C*)Object;
             auto SafeZonePhase = ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->SafeZonePhase;
             Indicator->NextCenter = (FVector_NetQuantize100)BusLocation;
             //std::cout << "SafeZonePhase: " << SafeZonePhase << "\n";
+            /*
             switch (SafeZonePhase)
             {
             case 0:
@@ -642,7 +715,7 @@ namespace Hooks
                 Indicator->NextRadius = 50;
                 break;
             }
-            /*
+            */
             switch (SafeZonePhase)
             {
             case 0:
@@ -668,31 +741,7 @@ namespace Hooks
                 Indicator->NextRadius = 50;
                 break;
             }
-            */
         }
-
-        // Loot on death: i dont have time to fix this, it works but it only drops ur consumables
-        /*
-        if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied" && bStartedBus && !bPlayground && !bHideAndSeek)
-        {
-            auto Params = static_cast<AFortPlayerControllerZone_ClientOnPawnDied_Params*>(Parameters);
-            auto DeadPC = (AFortPlayerControllerAthena*)Object;
-
-            for (int i = 0; i < DeadPC->WorldInventory->Inventory.ItemInstances.Num(); i++)
-            {
-                auto Definition = DeadPC->WorldInventory->Inventory.ItemInstances[i]->GetItemDefinitionBP();
-                if (!Definition->GetName().starts_with("WID_") && Definition->Class->GetName() == "FortWeaponRangedItemDefinition")
-                {
-                    auto Pickup = SummonPickup((AFortPlayerPawn*)DeadPC->Pawn, Definition, 1, DeadPC->Pawn->K2_GetActorLocation());
-                    Pickup->PrimaryPickupItemEntry.LoadedAmmo = DeadPC->WorldInventory->Inventory.ItemInstances[i]->ItemEntry.LoadedAmmo;
-                    Pickup->OnRep_PrimaryPickupItemEntry();
-                }
-            }
-
-            if (DeadPC->QuickBars)
-                DeadPC->QuickBars->K2_DestroyActor();
-        }
-        */
 
         if (Function->GetFullName() == "Function FortniteGame.FortPlayerControllerZone.ClientOnPawnDied" && bStartedBus)
         {
@@ -719,22 +768,6 @@ namespace Hooks
                 ((ABP_VictoryDrone_C*)Drone)->PlayerState = IsKiller ? Params->DeathReport.KillerPlayerState : nullptr;
                 ((ABP_VictoryDrone_C*)Drone)->OnRep_PlayerState();
 
-                /*
-                if (!bPlayground)
-                {
-                    std::cout << DeadPC->NetPlayerIndex << "Player Index 1\n";
-                    for (int i = 0; i < GameState->PlayerArray.Num(); i++)
-                    {
-                        if (GameState->PlayerArray[i] == DeadPlayerState)
-                        {
-                            std::cout << i << "Player Index 2\n";
-                            GameState->PlayerArray.RemoveAt(i);
-                        }
-                    }
-                    //GameState->PlayerArray.RemoveSingle(DeadPC->NetIndex);
-                }
-                */
-
                 FDeathInfo deathInfo;
                 deathInfo.bDBNO = false;
                 deathInfo.DeathLocation = DeadPawnLocation;
@@ -750,23 +783,16 @@ namespace Hooks
                     KillerPlayerState->KillScore++;
                     KillerPlayerState->TeamKillScore++;
                     KillerPlayerState->OnRep_Kills();
-                    UpdateSpecvars(DeadPC->NetConnection, KillerPlayerState);
-                    //Spectate(DeadPC->NetConnection, KillerPlayerState);
-                }
-                else
-                {
-                    DeadPlayerState->ClientReportKill(DeadPlayerState);
-                    if (GameState->PlayersLeft > 0 && !bPlayground)
+                    for (int i = 0; i < DeadPlayerState->Spectators.SpectatorArray.Num(); i++)
                     {
-                        TArray<AFortPlayerPawn*> Pawns;
-                        GetFortKismet()->STATIC_GetAllFortPlayerPawns(GetWorld(), &Pawns);
-                        auto RandomPawn = (AFortPlayerPawnAthena*)Pawns[rand() % Pawns.Num()];
-                        if (RandomPawn)
-                            UpdateSpecvars(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
-                        Pawns.FreeArray();
-                        //Spectate(DeadPC->NetConnection, (AFortPlayerStateAthena*)RandomPawn->Controller->PlayerState);
+                        auto State = DeadPlayerState->Spectators.SpectatorArray[i].PlayerState;
+                        if (State)
+                            Spectate(((AFortPlayerControllerAthena*)State->Owner)->NetConnection, KillerPlayerState);
+                        else continue;
                     }
                 }
+                else
+                    DeadPlayerState->ClientReportKill(DeadPlayerState);
 
                 // sometimes checking if the killer is the dead player is important
                 // if you dont and u die in storm and you were gliding it would loop this (no joke) 2,147,483,647 times, thus causing a stack overflow

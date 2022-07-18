@@ -84,6 +84,11 @@ enum EObjectFlags
 
 namespace Native
 {
+    namespace Fort
+    {
+        static void* (*OnReload)(AFortWeapon* a1, int a2);
+    }
+
     namespace Actor
     {
         inline void (*CallPreReplication)(AActor* Actor, UObject* NetDriver);
@@ -317,6 +322,10 @@ namespace Native
         Address = Utils::FindPattern(Patterns::GetNetPriority);
         CheckNullFatal(Address, "Failed to find GetNetPriority");
         AddressToFunction(Address, Actor::GetNetPriority);
+
+        Address = Utils::FindPattern(Patterns::OnReload);
+        CheckNullFatal(Address, "Failed to find OnReload");
+        AddressToFunction(Address, Fort::OnReload);
 
         ProcessEvent = reinterpret_cast<decltype(ProcessEvent)>(GetEngine()->Vtable[0x40]);
     }

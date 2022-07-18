@@ -4,14 +4,15 @@
 #include "ue4.h"
 #include "game.h"
 
-class Playground
+// GAMEMODE WIP
+
+class GunGame
 {
-public:
-    void InitializePlayground(AAthena_GameState_C* GameState)
+    void InitializeGunGame(AAthena_GameState_C* GameState)
     {
         ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZoneActive = false;
         ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = true;
-        
+
         if (GameState->CurrentPlaylistData)
         {
             GameState->CurrentPlaylistData->bNoDBNO = true;
@@ -47,20 +48,6 @@ public:
             }
             else
                 continue;
-        }
-    }
-
-    void OnDeath(AFortPlayerPawnAthena* KillerPawn)
-    {
-        if (KillerPawn && KillerPawn->GetHealth() > 0)
-        {
-            static int HealthToGive = 50;
-            if (KillerPawn->GetHealth() > HealthToGive)
-            {
-                HealthToGive = KillerPawn->GetMaxHealth() - KillerPawn->GetHealth();
-            }
-
-            KillerPawn->SetHealth(KillerPawn->GetHealth() + HealthToGive);
         }
     }
 };

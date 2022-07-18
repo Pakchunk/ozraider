@@ -18,22 +18,10 @@ namespace UFunctionHooks
     inline std::vector<UFunction*> toHook;
     inline std::vector<std::function<bool(UObject*, void*)>> toCall;
     inline ABuildingSMActor* PreviousBuildingActor;
-    inline bool thhis = false;
-    int iii = 0;
 
     #define DEFINE_PEHOOK(ufunctionName, func)                           \
         toHook.push_back(UObject::FindObject<UFunction>(ufunctionName)); \
         toCall.push_back([](UObject * Object, void* Parameters) -> bool func);
-
-    UNetConnection* IAmTheOneWhoSpectates;
-    AFortPlayerStateAthena* ToSpectatePlayerState;
-
-    auto UpdateSpecvars(UNetConnection* TWTS, AFortPlayerStateAthena* TWSP)
-    {
-        IAmTheOneWhoSpectates = TWTS;
-        ToSpectatePlayerState = TWSP;
-    }
-
 
     auto Initialize()
     {
@@ -421,14 +409,12 @@ namespace UFunctionHooks
                     InitPawn(PC, ExitLocation, FQuat(), false);
                     ((AAthena_GameState_C*)GetWorld()->AuthorityGameMode->GameState)->Aircrafts[0]->PlayEffectsForPlayerJumped();
                     PlayersJumpedFromBus++;
-                    auto State = static_cast<AFortPlayerStateAthena*>(PC->PlayerState);
+                    auto State = (AFortPlayerStateAthena*)PC->PlayerState;
 
                     //Seeker = (AFortPlayerPawnAthena*)State->GetCurrentPawn();
 
                     if (bHideAndSeek)
-                    {
                         HideAndSeek().AircraftJump(PC, State, Seeker);
-                    }
                     else
                     {
                         PC->ActivateSlot(EFortQuickBars::Primary, 0, 0, true); // Select the pickaxe
@@ -673,7 +659,7 @@ namespace UFunctionHooks
 
                 ((AAthena_GameMode_C*)GetWorld()->AuthorityGameMode)->GameSession->MaxPlayers = MAXPLAYERS;
                 bListening = true;
-                std::cout << "\n\nListening on port " << HostBeacon->ListenPort << "\n\n";
+                LOG_INFO("[LogRaider] Listening on port {}", HostBeacon->ListenPort);
             }
 
             return false;
@@ -708,6 +694,6 @@ namespace UFunctionHooks
             return true;
         })
 
-        printf("[+] Hooked %zu UFunction(s)\n", toHook.size());
+        LOG_INFO("[+] Hooked %zu UFunction(s)\n", toHook.size());
     }
 }

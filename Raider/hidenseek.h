@@ -8,63 +8,57 @@ class HideAndSeek
 public:
     void InitializeHideAndSeek()
     {
-        auto GameMode = reinterpret_cast<AFortGameModeAthena*>(GetWorld()->AuthorityGameMode);
-        GameMode->bSafeZoneActive = false;
-        GameMode->bSafeZonePaused = true;
+        ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZoneActive = false;
+        ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = true;
     }
 
     void AircraftJump(AFortPlayerControllerAthena* PC, AFortPlayerStateAthena* State, AFortPlayerStateAthena* Seeker)
     {
         if (State == Seeker)
         {
-            PC->ActivateSlot(EFortQuickBars::Primary, 0, 0, true); // Select the pickaxe
-
-            bool bFound = false;
-            auto PickaxeEntry = FindItemInInventory<UFortWeaponMeleeItemDefinition>(PC, bFound);
-
-            if (bFound)
-                EquipInventoryItem(PC, PickaxeEntry.ItemGuid);
+            for (int i = 0; i < PC->WorldInventory->Inventory.ItemInstances.Num(); i++)
+            {
+                auto instance = PC->WorldInventory->Inventory.ItemInstances[i];
+                if (instance->ItemEntry.ItemDefinition->IsA(UFortWeaponMeleeItemDefinition::StaticClass()))
+                {
+                    EquipInventoryItem(PC, instance->ItemEntry.ItemGuid);
+                    break;
+                }
+                else
+                    continue;
+            }
         }
         else
         {
-            //PC->ActivateSlot(EFortQuickBars::Primary, 0, 0, true); // Select the pickaxe
+            UFortWeaponRangedItemDefinition* PID = nullptr;
 
-            //bool bFound = false;
-            //auto PickaxeEntry = FindItemInInventory<UFortWeaponMeleeItemDefinition>(PC, bFound);
-            //auto Entries = PC->WorldInventory->Inventory.ItemInstances;
-            //if (bFound)
-                //EquipInventoryItem(PC, PickaxeEntry.ItemGuid);
-            static PlayerLoadout HiderLoadout = 
+            for (int i = 0; i < PC->WorldInventory->Inventory.ItemInstances.Num(); i++)
             {
-                (UFortWeaponRangedItemDefinition*)PC->WorldInventory->Inventory.ItemInstances[15]->ItemEntry.ItemDefinition,
-                nullptr,
-                nullptr,
-                nullptr,
-                nullptr,
-                nullptr
-            };
+                auto instance = PC->WorldInventory->Inventory.ItemInstances[i];
+                if (instance->ItemEntry.ItemDefinition->IsA(UFortWeaponMeleeItemDefinition::StaticClass()))
+                {
+                    PID = (UFortWeaponRangedItemDefinition*)instance->ItemEntry.ItemDefinition;
+                    break;
+                }
+                else
+                    continue;
+            }
 
-            PC->QuickBars->Owner = nullptr;
-            PC->QuickBars->SetOwner(nullptr);
-            PC->QuickBars->OnRep_Owner();
-            PC->QuickBars->K2_DestroyActor();
-            PC->QuickBars = nullptr;
-            PC->OnRep_QuickBar();
-            InitInventory(PC, false);
-            //EquipLoadout(PC, HiderLoadout);
-            //AddItem(PC, nullptr, 0);
+            if (PC && PC->QuickBars && PC->WorldInventory)
+            {
+                PC->QuickBars->K2_DestroyActor();
+                PC->WorldInventory->Inventory.ItemInstances.FreeArray();
+                PC->WorldInventory->Inventory.ReplicatedEntries.FreeArray();
+                PC->QuickBars = SpawnActor<AFortQuickBars>({ -280, 400, 3000 }, PC);
+                PC->OnRep_QuickBar();
+                EquipLoadout(PC, {PID});
+            }
+
             auto Pawn = (AFortPlayerPawnAthena*)PC->Pawn;
             Pawn->SetMaxHealth(50);
             Pawn->SetMaxShield(0);
-            EquipLoadout(PC, HiderLoadout);
 
-            PC->ActivateSlot(EFortQuickBars::Primary, 0, 0, true);
-
-            bool bFoundAgain = false;
-            auto newPickaxeEntry = FindItemInInventory<UFortWeaponMeleeItemDefinition>(PC, bFoundAgain);
-
-            if (bFoundAgain)
-                EquipInventoryItem(PC, newPickaxeEntry.ItemGuid);
+            EquipInventoryItem(PC, PC->QuickBars->PrimaryQuickBar.Slots[0].Items[0]);
         }
     }
 };

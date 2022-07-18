@@ -75,6 +75,11 @@
       <Filter>Custom</Filter>
     </ClInclude>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="inireader.h" />
+    <ClInclude Include="logger.h" />
+    <ClInclude Include="gungame.h">
+      <Filter>Custom</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -45,4 +45,8 @@ namespace Patterns
     constexpr const char* NetDebug = "40 55 56 41 56 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 48 8B 01 48 8B F1 FF 90 ? ? ? ? 4C 8B F0 48 85 C0 0F";
     constexpr const char* StartBecomingDormant = "48 8B C4 55 53 48 8D 68 A1 48 81 EC ? ? ? ? F6 41 30 84";
     constexpr const char* GetNetPriority = "F6 81 ? ? ? ? ? 74 22 4C 8B 99 ? ? ? ? 4D 85 DB 74 16 0F B6 44 24 ? 49 8B CB 4D 8B 13 88 44 24 40";
+
+    constexpr const char* OnReload = "89 54 24 10 55 41 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 80 B9 ? ? ? ? ? 4C 8B F1 0F 85 ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 84 C0 0F 84 ? ? ? ?";
+    //constexpr const char* MatchWallPattern = "40 55 48 81 EC B0 00 00 00 49 63 E9 4C 8B DA 4C 8B D1";
+    //constexpr const char* GetEngineVersion = "40 53 48 83 EC 20 48 8B D9 48 83 C1 08 E8 BE DC 2B FF 48 8D 8B 20 01 00 00 48 8B D0";
 }

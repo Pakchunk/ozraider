@@ -1,5 +1,7 @@
 #pragma once
 
+#include "inireader.h"
+
 static void Error(std::string error, bool bExit = false)
 {
     MessageBoxA(nullptr, error.c_str(), "Error", MB_OK | MB_ICONERROR);
@@ -126,5 +128,38 @@ namespace Utils
     static T Max(T f, T s)
     {
         return f > s ? f : s;
+    }
+
+    template <typename T>
+    static T* FindObjectFast(std::string ObjectName, UClass* Class = UObject::StaticClass())
+    {
+        auto OrigInName = std::wstring(ObjectName.begin(), ObjectName.end()).c_str();
+
+        static auto StaticFindObjectAddr = FindPattern("48 89 5C 24 ? 48 89 74 24 ? 55 57 41 54 41 56 41 57 48 8B EC 48 83 EC 60 80 3D ? ? ? ? ? 45 0F B6 F1");
+        auto StaticFindObject = (T * (*)(UClass*, UObject * Package, const wchar_t* OrigInName, bool ExactClass))(StaticFindObjectAddr);
+        return StaticFindObject(Class, nullptr, OrigInName, false);
+    }
+
+    inline auto Ini()
+    {
+        INIReader reader("RaiderConfig.ini");
+        return reader;
+    }
+
+    static auto DelimiterParse(const std::string& str, const std::string& delimiter)
+    {
+        size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+        std::string token;
+        std::vector<std::string> res;
+
+        while ((pos_end = str.find(delimiter, pos_start)) != -1)
+        {
+            token = str.substr(pos_start, pos_end - pos_start);
+            pos_start = pos_end + delim_len;
+            res.push_back(token);
+        }
+
+        res.push_back(str.substr(pos_start));
+        return res;
     }
 };

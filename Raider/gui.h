@@ -3,8 +3,10 @@
 #include "ZeroGUI.h"
 #include <format>
 #include <mutex>
+#include "gungame.h"
 #include "hidenseek.h"
 #include "playground.h"
+#include "framework.h"
 
 bool bStartedBus = false;
 
@@ -24,7 +26,8 @@ bool bLooting = false;
 FVector BusLocation;
 // pregame
 bool bCosmetics = true;
-bool bLoadoutRegular = true;
+bool bLoadoutRandom = false;
+bool bLoadoutIni = false;
 bool bLoadoutExplosives = false;
 bool bLoadoutSnipers = false;
 
@@ -34,12 +37,14 @@ static UFortPlaylistAthena* SoloPlaylist;
 
 enum class WeaponLoadout
 {
-    REGULAR,
+    NONE,
+    RANDOM,
+    INI,
     EXPLOSIVES,
     SNIPERS
 };
 
-WeaponLoadout loadoutToUse = WeaponLoadout::REGULAR;
+WeaponLoadout loadoutToUse = WeaponLoadout::NONE;
 
 namespace GUI
 {
@@ -167,7 +172,8 @@ namespace GUI
 
                         if (ZeroGUI::Button(L"Kick", { 60.0f, 25.0f }))
                         {
-                            KickController((APlayerController*)GameState->PlayerArray[PlayerIndex]->Owner, L"You have been kicked by the server.");
+                            static std::wstring Reason(Utils::Ini().Get("Players", "DefaultKickText", "You have been kicked by the server.").begin(), Utils::Ini().Get("Players", "DefaultKickText", "You have been kicked by the server.").end());
+                            KickController((APlayerController*)GameState->PlayerArray[PlayerIndex]->Owner, Reason.c_str());
 
                             mtx.lock();
                             PlayerIndex = -1;
@@ -218,9 +224,16 @@ namespace GUI
 
                                 if (static_cast<AAthena_GameState_C*>(GetWorld()->GameState)->GamePhase >= EAthenaGamePhase::Aircraft)
                                 {
-                                    printf("The bus has already started!\n");
+                                    LOG_INFO("[LogRaider] The bus has already started.");
                                     bStartedBus = true;
                                 }
+
+                                for (auto build : PlayerBuilds)
+                                {
+                                    if (build)
+                                        build->K2_DestroyActor();
+                                }
+                                PlayerBuilds.clear();
 
                                 GameState->bGameModeWillSkipAircraft = false;
                                 GameState->AircraftStartTime = 0;
@@ -229,7 +242,7 @@ namespace GUI
                                 static auto Kismet = GetKismetSystem();
                                 Kismet->STATIC_ExecuteConsoleCommand(GetWorld(), L"startaircraft", nullptr);
 
-                                if (bBusOnLocations)
+                                if (bBusOnLocations || bHideAndSeek)
                                 {
                                     auto RandomLocation = getRandomLocation();
                                     BusLocation = RandomLocation;
@@ -242,26 +255,20 @@ namespace GUI
                                     GameState->GetAircraft(0)->FlightInfo.FlightSpeed = 0;
                                     if (bHideAndSeek)
                                         HideAndSeek().InitializeHideAndSeek();
-
-                                    if (bPlayground)
-                                        Playground().InitializePlayground(SoloPlaylist, GameState);
                                 }
 
-                                //HideAndSeek().InitializeHideAndSeek();
-                                printf("The bus has been started!\n");
+                                if (bPlayground)
+                                    Playground().InitializePlayground(GameState);
+
+                                LOG_INFO("[LogRaider] The bus has been started.");
                                 bStartedBus = true;
                             }
 
-                            ZeroGUI::Checkbox(L"Spawn bus on a random location?", &bBusOnLocations);
-
-                            if (bBusOnLocations)
-                                ZeroGUI::Checkbox(L"Base storm around random location?", &bSafeZoneBased);
-
-                            if (!bPlayground)
-                                ZeroGUI::Checkbox(L"Hide & Seek GameMode?", &bHideAndSeek);
-
                             if (!bHideAndSeek)
-                                ZeroGUI::Checkbox(L"Playground GameMode?", &bPlayground);
+                                ZeroGUI::Checkbox(L"Spawn bus on a random location?", &bBusOnLocations);
+
+                            if (bBusOnLocations && !bHideAndSeek)
+                                ZeroGUI::Checkbox(L"Base storm around random location?", &bSafeZoneBased);
                         }
 
 
@@ -279,11 +286,21 @@ namespace GUI
                             PlayerBuilds.clear();
                         }
 
+                        if (ZeroGUI::Button(L"Destroy All Pickups", FVector2D {100,25}))
+                        {
+                            TArray<AActor*> Actors;
+                            GetGameplayStatics()->STATIC_GetAllActorsOfClass(GetWorld(), AFortPickupAthena::StaticClass(), &Actors);
+                            for (int i = 0; i < Actors.Num(); i++)
+                            {
+                                Actors[i]->K2_DestroyActor();
+                            }
+                            Actors.FreeArray();
+                        }
+
                         if (ZeroGUI::Button(L"Stop Server", FVector2D {100,25}))
                         {
                             bRestart = true;
                         }
-
 
                         break;
                     }
@@ -328,31 +345,59 @@ namespace GUI
                     {
                         bReadyToStart = true;
                         ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->ReadyToStartMatch();
+                        if (bHideAndSeek)
+                        {
+                            bBusOnLocations = true;
+                            bSafeZoneBased = true;
+                        }
                     }
+                    ZeroGUI::Text(L"Game", false, true);
+                    ZeroGUI::Checkbox(L"Playground GameMode?", &bPlayground);
+                    ZeroGUI::Checkbox(L"Hide & Seek GameMode?", &bHideAndSeek);
+                    if (bPlayground)
+                        bHideAndSeek = false;
+                    if (bHideAndSeek)
+                        bPlayground = false;
                     ZeroGUI::Text(L"Player Loadout", false, true);
                     ZeroGUI::Checkbox(L"Allow Cosmetics?", &bCosmetics);
-                    ZeroGUI::Checkbox(L"Regular Loadout", &bLoadoutRegular);
+                    ZeroGUI::Checkbox(L"Infinite Ammo?", &bInfiniteAmmo);
+                    ZeroGUI::Checkbox(L"Random Loadout", &bLoadoutRandom);
+                    ZeroGUI::Checkbox(L"Loadout From Ini", &bLoadoutIni);
                     ZeroGUI::Checkbox(L"Rockets Loadout", &bLoadoutExplosives);
                     ZeroGUI::Checkbox(L"Snipers Loadout", &bLoadoutSnipers);
                     ZeroGUI::Text(L"World", false, true);
                     ZeroGUI::Checkbox(L"Enable Looting?", &bLooting);
 
-                    if (bLoadoutRegular)
+                    if (!bLoadoutRandom && !bLoadoutIni && !bLoadoutExplosives && !bLoadoutSnipers)
                     {
-                        loadoutToUse = WeaponLoadout::REGULAR;
+                        loadoutToUse = WeaponLoadout::NONE;
+                    }
+                    if (bLoadoutRandom)
+                    {
+                        loadoutToUse = WeaponLoadout::RANDOM;
+                        bLoadoutIni = false;
+                        bLoadoutExplosives = false;
+                        bLoadoutSnipers = false;
+                    }
+                    if (bLoadoutIni)
+                    {
+                        loadoutToUse = WeaponLoadout::INI;
+                        bLoadoutRandom = false;
                         bLoadoutExplosives = false;
                         bLoadoutSnipers = false;
                     }
                     if (bLoadoutExplosives)
                     {
                         loadoutToUse = WeaponLoadout::EXPLOSIVES;
-                        bLoadoutRegular = false;
+                        bLoadoutRandom = false;
+                        bLoadoutIni = false;
                         bLoadoutSnipers = false;
                     }
                     if (bLoadoutSnipers)
                     {
                         loadoutToUse = WeaponLoadout::SNIPERS;
-                        bLoadoutRegular = false;
+                        bLoadoutRandom = false;
+                        bLoadoutIni = false;
                         bLoadoutExplosives = false;
                     }
 

@@ -4,16 +4,21 @@
 #include "game.h"
 #include "hooks.h"
 #include "ufunctionhooks.h"
+#include "logger.h"
 
 DWORD WINAPI Main(LPVOID lpParam)
 {
-    SetupConsole();
 
-    auto Start = std::chrono::steady_clock::now();
+    //SetupConsole();
+    AllocConsole();
+
+    raider::utils::Logger::Initialize();
+
+    LOG_INFO("[LogRaider] Welcome to Raider!");
+
     Native::InitializeAll();
-    auto End = std::chrono::steady_clock::now();
 
-    printf("[Native::InitializeAll] Time: %.02f ms\n", (End - Start).count() / 1000000.);
+    LOG_INFO("[Native::InitializeAll] Initialized hooks.");
 
     UFunctionHooks::Initialize();
 
@@ -30,9 +35,9 @@ DWORD WINAPI Main(LPVOID lpParam)
     DetourAttachE(ProcessEvent, Hooks::ProcessEventHook);
     DETOUR_END
 
-    printf("[+] Hooked ProcessEvent\n");
+    LOG_INFO("[LogRaider] Hooked ProcessEvent");
 
-    printf("[+] Base Address: %p\n", Offsets::Imagebase);
+    LOG_INFO("[LogRaider] Base Address: {:X}", Offsets::Imagebase);
 
     CreateConsole();
 	
