@@ -151,10 +151,11 @@ namespace GUI
             {
                 /* static auto*/ GameState = (AAthena_GameState_C*)GetWorld()->GameState;
                 static APlayerState* currentPlayer = nullptr;
+                static int GravityIndex = 0;
                 static int PlayerIndex = -1;
 
                 // This is bad, but works for now.
-                if (PlayerIndex != -1)
+                if (PlayerIndex != -1 && GameState->PlayerArray[PlayerIndex] != nullptr)
                 {
                     if (ZeroGUI::Button(L"<", { 25.0f, 25.0f }))
                     {
@@ -289,7 +290,7 @@ namespace GUI
                         if (ZeroGUI::Button(L"Destroy All Pickups", FVector2D {100,25}))
                         {
                             TArray<AActor*> Actors;
-                            GetGameplayStatics()->STATIC_GetAllActorsOfClass(GetWorld(), AFortPickupAthena::StaticClass(), &Actors);
+                            GetGameplayStatics()->STATIC_GetAllActorsOfClass(GetWorld(), AFortPickup::StaticClass(), &Actors);
                             for (int i = 0; i < Actors.Num(); i++)
                             {
                                 Actors[i]->K2_DestroyActor();

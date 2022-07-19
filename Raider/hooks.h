@@ -5,8 +5,6 @@
 #include "inireader.h"
 
 // #define LOGGING
-#define HEALTH 100
-#define SHIELD 100
 
 namespace Hooks
 {
@@ -210,8 +208,7 @@ namespace Hooks
         static auto Default = FindWID("WID_Harvest_Pickaxe_Athena_C_T01");
         auto RandomPickaxe = (UFortWeaponRangedItemDefinition*)Looting::PickaxePool[GetMath()->STATIC_RandomInteger(Looting::PickaxePool.size())];
         UFortWeaponRangedItemDefinition* Pickaxe;
-        Pickaxe = bCosmetics ? Default : RandomPickaxe;
-        LOG_INFO("Player Pickaxe: {}", Pickaxe->GetName());
+        Pickaxe = bCosmetics ? RandomPickaxe : Default;
 
         switch (loadoutToUse)
         {
@@ -363,6 +360,7 @@ namespace Hooks
 
             auto name = Utils::DelimiterParse(Utils::DelimiterParse(Connection->RequestURL.ToString(), "?")[1], "=")[1];
             LOG_INFO("[LogRaider] Recieved connection from user: '{}', player is now joining.", name);
+
             Native::World::WelcomePlayer(GetWorld(), Connection);
 			
             return;
@@ -429,6 +427,7 @@ namespace Hooks
         DetourDetachE(Native::OnlineSession::KickPlayer, KickPlayer);
         DetourDetachE(Native::GameViewportClient::PostRender, PostRender);
         DetourDetachE(Native::GC::CollectGarbage, CollectGarbage);
+        DetourDetachE(Native::Fort::OnReload, OnReloadHook);
         DETOUR_END
     }
 
@@ -522,8 +521,6 @@ namespace Hooks
             bSafeZoneBased = false;
             PlayersJumpedFromBus = 0;
             ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->bSafeZonePaused = false;
-            //SpectatorConnection = nullptr;
-            //ToSpectatePlayerState = nullptr;
             PlayerBuilds.clear();
             for (auto team : teamsmap)
             {
@@ -569,6 +566,102 @@ namespace Hooks
         }
 
 
+        if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ClientReportDamagedResourceBuilding")
+        {
+            auto Controller = (AFortPlayerControllerAthena*)Object;
+            auto Params = (AFortPlayerController_ClientReportDamagedResourceBuilding_Params*)Parameters;
+            auto ResourceType = Params->PotentialResourceType.GetValue();
+            UFortResourceItemDefinition* WorldItemDefinition = nullptr;
+            static auto WoodDefinition = Utils::FindObjectFast<UFortResourceItemDefinition>(ResourcePoolNames[0]);
+            static auto StoneDefinition = Utils::FindObjectFast<UFortResourceItemDefinition>(ResourcePoolNames[1]);
+            static auto MetalDefinition = Utils::FindObjectFast<UFortResourceItemDefinition>(ResourcePoolNames[2]);
+
+            switch (ResourceType)
+            {
+                case EFortResourceType::Wood:
+                    WorldItemDefinition = WoodDefinition;
+                    break;
+                case EFortResourceType::Stone:
+                    WorldItemDefinition = StoneDefinition;
+                    break;
+                case EFortResourceType::Metal:
+                    WorldItemDefinition = MetalDefinition;
+                    break;
+            }
+
+            bool bFound = false;
+
+            if (WorldItemDefinition)
+            {
+                for (int i = 0; i < Controller->WorldInventory->Inventory.ReplicatedEntries.Num(); i++)
+                {
+                    if (Controller->WorldInventory->Inventory.ReplicatedEntries[i].ItemDefinition == WorldItemDefinition)
+                    {
+                        bFound = true;
+                        Controller->WorldInventory->Inventory.ReplicatedEntries[i].Count += Params->PotentialResourceCount;
+                        Controller->WorldInventory->Inventory.ReplicatedEntries[i].ReplicationKey++;
+
+                        if (Controller->WorldInventory->Inventory.ReplicatedEntries[i].Count <= 0)
+                        {
+                            Controller->WorldInventory->Inventory.ReplicatedEntries.RemoveSingle(i);
+
+                            for (int j = 0; j < Controller->WorldInventory->Inventory.ItemInstances.Num(); j++)
+                            {
+                                auto ItemInstance = Controller->WorldInventory->Inventory.ItemInstances[j];
+
+                                if (ItemInstance && ItemInstance->GetItemDefinitionBP() == WorldItemDefinition)
+                                {
+                                    Controller->WorldInventory->Inventory.ItemInstances.RemoveSingle(i);
+                                    break;
+                                }
+                                else
+                                    continue;
+                            }
+                        }
+
+                        Inventory::Update(Controller, 0, true);
+                        break;
+                    }
+                    else
+                        continue;
+                }
+
+                if (!bFound)
+                {
+                    for (int i = 0; i < Controller->QuickBars->SecondaryQuickBar.Slots.Num(); i++)
+                    {
+                        if (!Controller->QuickBars->SecondaryQuickBar.Slots[i].Items.Data) // Checks if the slot is empty
+                        {
+                            Inventory::AddItemToSlot(Controller, WorldItemDefinition, i, EFortQuickBars::Secondary, Params->PotentialResourceCount);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ToDo: Proper material gather amount and weak spot multiplier
+        if (Function->GetName() == "OnDamagePlayEffects" || Function->GetName() == "OnDeathPlayEffects")
+        {
+            if (!Object->IsA(AFortPlayerPawnAthena::StaticClass()))
+            {
+                auto Params = (ABuildingActor_OnDamagePlayEffects_Params*)Parameters;
+                if (Params->InstigatedBy)
+                {
+                    auto Controller = (AFortPlayerControllerAthena*)Params->InstigatedBy->Controller;
+                    //if (Controller->WeakspotUnderReticle.IsValid())
+                        //LOG_INFO("WeakSpot Valid");
+
+                    if (Controller && Params->DamageCauser->GetFullName().find("Melee") != -1)
+                    {
+                        auto Obj = (ABuildingSMActor*)Object;
+                        if (Obj->bPlayerPlaced != true)
+                            Controller->ClientReportDamagedResourceBuilding(Obj, Obj->ResourceType, GetMath()->STATIC_RandomFloatInRange(5, 11), Function->GetName() == "OnDeathPlayEffects" ? true : false, false);
+                    }
+                }
+            }
+        }
+
         if (Function->GetFullName() == "Function BP_VictoryDrone.BP_VictoryDrone_C.OnSpawnOutAnimEnded")
         {
             if (!bPlayground)
@@ -606,54 +699,50 @@ namespace Hooks
         if (Function->GetFullName() == "Function FortniteGame.FortPlayerController.ServerAttemptInteract" && bLooting && bStartedBus && !bHideAndSeek)
         {
             auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
-            //std::cout << "\n\n" << Params->ReceivingActor->GetName() << "\n" << Params->ReceivingActor->StaticClass()->GetFullName() << "\n\n"; \
-            \
-            code lowkey needs cleanup + improvements \
-            todo: ammo count logic 
-            if (Params->ReceivingActor->GetFullName().find("Tiered_Chest_6_Parent_C") != std::string::npos)
+            if (Params->ReceivingActor->IsA(ABuildingContainer::StaticClass()))
             {
                 auto Container = (ABuildingContainer*)Params->ReceivingActor;
-                Container->bAlreadySearched = true;
-                Container->bStartAlreadySearched_Athena = true;
-                Container->OnRep_bAlreadySearched();
-                auto LootArray = Looting::GetChestLoot();
-
-                for (int i = 0; i < LootArray.Num(); i++)
+                if (Container->bAlreadySearched != true)
                 {
-                    int Count = 1;
-                    if (LootArray[i]->IsA(UFortAmmoItemDefinition::StaticClass()))
-                        Count = ((UFortAmmoItemDefinition*)LootArray[i])->DropCount;
-                    if (LootArray[i]->IsA(UFortResourceItemDefinition::StaticClass()))
-                        Count = 30;
-
-                    auto Pickup = SummonPickup(nullptr, LootArray[i], Count, Container->K2_GetActorLocation());
-                    //LOG_INFO("{}", ((UFortWeaponItemDefinition*)Pickup->PrimaryPickupItemEntry.ItemDefinition)->GetWeaponActorClass()->GetName());
-                    if (Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()))
+                    Container->bAlreadySearched = true;
+                    Container->bStartAlreadySearched_Athena = true;
+                    Container->OnRep_bAlreadySearched();
+                    if (Params->ReceivingActor->GetFullName().find("Tiered_Chest_6_Parent_C") != -1)
                     {
-                        auto WeaponWid = (UFortWeaponItemDefinition*)Pickup->PrimaryPickupItemEntry.ItemDefinition;
-                        auto ActorClass = (AFortWeapon*)WeaponWid->GetWeaponActorClass();
+                        auto LootArray = Looting::GetChestLoot();
+                        for (int i = 0; i < LootArray.Num(); i++)
+                        {
+                            int Count = 1;
+                            if (LootArray[i]->IsA(UFortAmmoItemDefinition::StaticClass()))
+                                Count = ((UFortAmmoItemDefinition*)LootArray[i])->DropCount;
+                            if (LootArray[i]->IsA(UFortResourceItemDefinition::StaticClass()))
+                                Count = 30;
 
-                        Pickup->PrimaryPickupItemEntry.LoadedAmmo = ActorClass->GetBulletsPerClip();
+                            auto Pickup = SummonPickup(nullptr, LootArray[i], Count, Container->K2_GetActorLocation());
+                            //LOG_INFO("{}", ((UFortWeaponItemDefinition*)Pickup->PrimaryPickupItemEntry.ItemDefinition)->GetWeaponActorClass()->GetName());
+                            if (Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()))
+                            {
+                                auto WeaponWid = (UFortWeaponItemDefinition*)Pickup->PrimaryPickupItemEntry.ItemDefinition;
+                                auto ActorClass = (AFortWeapon*)WeaponWid->GetWeaponActorClass();
+
+                                Pickup->PrimaryPickupItemEntry.LoadedAmmo = ActorClass->GetBulletsPerClip();
+                            }
+                        }
+                        LootArray.FreeArray();
+                    }
+                    if (Params->ReceivingActor->GetFullName().find("Tiered_Short_Ammo_3_Parent_C") != -1)
+                    {
+                        auto AmmoArray = Looting::GetAmmoBoxLoot();
+                        for (int i = 0; i < AmmoArray.Num(); i++)
+                            SummonPickup(nullptr, AmmoArray[i], AmmoArray[i]->DropCount, Container->K2_GetActorLocation());
+                        AmmoArray.FreeArray();
                     }
                 }
             }
-            if (Params->ReceivingActor->GetFullName().find("Tiered_Short_Ammo_3_Parent_C") != std::string::npos)
+
+            // this one is just for funsies take it out if u want
+            if (Params->ReceivingActor->GetFullName().find("AthenaSupplyDrop") != -1)
             {
-                auto Container = (ABuildingContainer*)Params->ReceivingActor;
-                Container->bAlreadySearched = true;
-                Container->bStartAlreadySearched_Athena = true;
-                Container->OnRep_bAlreadySearched();
-                auto AmmoArray = Looting::GetAmmoBoxLoot();
-                for (int i = 0; i < AmmoArray.Num(); i++)
-                    SummonPickup(nullptr, AmmoArray[i], AmmoArray[i]->DropCount, Container->K2_GetActorLocation());
-                AmmoArray.FreeArray();
-            }
-            if (Params->ReceivingActor->GetFullName().find("AthenaSupplyDrop") != std::string::npos)
-            {
-                auto Container = (ABuildingContainer*)Params->ReceivingActor;
-                Container->bAlreadySearched = true;
-                Container->bStartAlreadySearched_Athena = true;
-                Container->OnRep_bAlreadySearched();
                 auto LootArray = Looting::GetSupplyDropLoot();
                 for (int i = 0; i < LootArray.Num(); i++)
                 {
@@ -663,13 +752,13 @@ namespace Hooks
                     if (LootArray[i]->IsA(UFortResourceItemDefinition::StaticClass()))
                         Count = 100;
 
-                    SummonPickup(nullptr, LootArray[i], Count, Container->K2_GetActorLocation());
+                    SummonPickup(nullptr, LootArray[i], Count, Params->ReceivingActor->K2_GetActorLocation());
                 }
+                LootArray.FreeArray();
             }
-            // this one is just for funsies take it out if u want
-            if (Params->ReceivingActor->GetFullName().find("Prop_QuestInteractable_GniceGnome") != std::string::npos)
+            if (Params->ReceivingActor->GetFullName().find("Prop_QuestInteractable_GniceGnome") != -1)
             {
-                KickController((APlayerController*)Object, L"dont fuck with the gnome");
+                //KickController((APlayerController*)Object, L"dont fuck with the gnome");
             }
         }
 
@@ -783,13 +872,6 @@ namespace Hooks
                     KillerPlayerState->KillScore++;
                     KillerPlayerState->TeamKillScore++;
                     KillerPlayerState->OnRep_Kills();
-                    for (int i = 0; i < DeadPlayerState->Spectators.SpectatorArray.Num(); i++)
-                    {
-                        auto State = DeadPlayerState->Spectators.SpectatorArray[i].PlayerState;
-                        if (State)
-                            Spectate(((AFortPlayerControllerAthena*)State->Owner)->NetConnection, KillerPlayerState);
-                        else continue;
-                    }
                 }
                 else
                     DeadPlayerState->ClientReportKill(DeadPlayerState);

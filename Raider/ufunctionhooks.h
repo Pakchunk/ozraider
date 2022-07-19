@@ -343,6 +343,7 @@ namespace UFunctionHooks
                             NewBuildingActor->ForceBuildingHealth(NewBuildingActor->GetMaxHealth() * HealthPercent);
                         NewBuildingActor->SetMirrored(Params->bMirrored);
                         NewBuildingActor->InitializeKismetSpawnedBuildingActor(NewBuildingActor, PC);
+                        NewBuildingActor->bPlayerPlaced = true;
                         auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
                         NewBuildingActor->Team = PlayerState->TeamIndex;
                         PlayerBuilds.push_back(NewBuildingActor);
@@ -429,7 +430,7 @@ namespace UFunctionHooks
                     auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
                     PlayerState->OnRep_CharacterParts();
                     // PC->Pawn->K2_TeleportTo(ExitLocation, Params->ClientRotation);
-                    if (PlayersJumpedFromBus >= GameState->PlayerArray.Num())
+                    if (PlayersJumpedFromBus >= GameState->PlayerArray.Num() && bSafeZoneBased)
                     {
                         ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->OnAircraftExitedDropZone(GameState->GetAircraft(0));
                         GameState->SafeZonesStartTime -= 59;

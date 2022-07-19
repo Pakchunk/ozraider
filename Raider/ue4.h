@@ -11,6 +11,9 @@ constexpr auto PI = 3.1415926535897932f;
 constexpr auto INV_PI = 0.31830988618f;
 constexpr auto HALF_PI = 1.57079632679f;
 
+#define HEALTH 100
+#define SHIELD 100
+
 typedef std::array<UFortWeaponRangedItemDefinition*, 6> PlayerLoadout; // Array of weapons for the player to equip.
 
 inline bool bTraveled = false;
@@ -1042,8 +1045,16 @@ static void InitPawn(AFortPlayerControllerAthena* PlayerController, FVector Loc 
 
     Pawn->HealthSet->Health.Minimum = 0;
     Pawn->HealthSet->Shield.Minimum = 0;
-    Pawn->SetMaxHealth(100);
-    Pawn->SetMaxShield(100);
+    Pawn->SetMaxHealth(HEALTH);
+    Pawn->SetMaxShield(SHIELD);
+    Pawn->SetHealth(HEALTH);
+    Pawn->HealthSet->CurrentShield.CurrentValue = SHIELD;
+    Pawn->HealthSet->CurrentShield.Maximum = SHIELD;
+    Pawn->HealthSet->Shield.CurrentValue = SHIELD;
+    Pawn->HealthSet->Shield.Maximum = SHIELD;
+    Pawn->HealthSet->OnRep_Shield();
+    Pawn->HealthSet->OnRep_CurrentShield();
+    
     
     Pawn->ShieldRegenGameplayEffect = nullptr;
     Pawn->ShieldRegenDelayGameplayEffect = nullptr;
@@ -1622,6 +1633,7 @@ inline void Build(AFortPlayerControllerAthena* PC, ABuildingSMActor* BuildingAct
             BuildingActor->DynamicBuildingPlacementType = EDynamicBuildingPlacementType::DestroyAnythingThatCollides;
             BuildingActor->SetMirrored(Params->bMirrored);
             BuildingActor->InitializeKismetSpawnedBuildingActor(BuildingActor, PC);
+            BuildingActor->bPlayerPlaced = true;
             auto PlayerState = (AFortPlayerStateAthena*)PC->PlayerState;
             BuildingActor->Team = PlayerState->TeamIndex;
             PlayerBuilds.push_back(BuildingActor);
@@ -1739,6 +1751,8 @@ void SpawnDeco(AFortDecoTool* Tool, void* _Params)
                 auto Pawn = (APlayerPawn_Athena_C*)Tool->Owner;
 
                 Trap->InitializeKismetSpawnedBuildingActor(Trap, (AFortPlayerController*)Pawn->Controller);
+
+                Trap->bPlayerPlaced = true;
 
 				Trap->AttachedTo = Params->AttachedActor;
                 Trap->OnRep_AttachedTo();
