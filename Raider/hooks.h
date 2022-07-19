@@ -618,6 +618,12 @@ namespace Hooks
                                     continue;
                             }
                         }
+			else if (Controller->WorldInventory->Inventory.ReplicatedEntries[i].Count > 999)
+                        {
+                            SummonPickup(Controller->Pawn, WorldItemDefinition, Controller->WorldInventory->Inventory.ReplicatedEntries[i].Count - 999, Controller->Pawn->K2_GetActorLocation());
+							Controller->WorldInventory->Inventory.ReplicatedEntries[i].Count = 999;
+                            Inventory::Update(Controller, 0, true);
+                        }
 
                         Inventory::Update(Controller, 0, true);
                         break;
