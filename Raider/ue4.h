@@ -1547,6 +1547,7 @@ namespace Inventory // includes quickbars
                             }
 
                             Inventory::RemoveItemFromSlot(Controller, FocusedSlot, EFortQuickBars::Primary);
+		 	    Inventory::Update(Controller, 0, true);
                         }
 
 						int Idx = 0;
