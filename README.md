@@ -3,6 +3,9 @@
 
 ozRaider is a heavily modified version of Kemo's [Raider](https://github.com/kem0x/raider3.5) project. The intentions of ozRaider's is to bring more customization to Raider and add fun things like custom gamemodes, and to make the server more controllable and user friendly.
 
+If you are a Raider developer or an Epic employee and you wish for me to take this repository down, contact me on Discord: **ozne#4492**<br>
+Or you can [create an issue](https://github.com/Pakchunk/ozraider/issues/new), and I will remove this repository with no hesitation. 
+
 ## - Features and Gamemodes
 ### Features
 - The ability to return to lobby and restart the server
