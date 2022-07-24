@@ -87,6 +87,7 @@ namespace Native
     namespace Fort
     {
         static void* (*OnReload)(AFortWeapon* a1, int a2);
+        inline void (*WeakSpotHit)(__int64 a1, int a2, __int64 a3, __int64 a4, __int64 a5, __int64 a6);
     }
 
     namespace Actor
@@ -326,6 +327,10 @@ namespace Native
         Address = Utils::FindPattern(Patterns::OnReload);
         CheckNullFatal(Address, "Failed to find OnReload");
         AddressToFunction(Address, Fort::OnReload);
+
+        Address = Utils::FindPattern(Patterns::WeakSpot);
+        CheckNullFatal(Address, "Failed to find WeakSpot");
+        AddressToFunction(Address, Fort::WeakSpotHit);
 
         ProcessEvent = reinterpret_cast<decltype(ProcessEvent)>(GetEngine()->Vtable[0x40]);
     }

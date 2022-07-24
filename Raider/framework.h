@@ -141,49 +141,6 @@ static std::vector<std::string> AmmoPoolNames = {
     "/Game/Athena/Items/Ammo/AthenaAmmoDataBulletsHeavy.AthenaAmmoDataBulletsHeavy"
 };
 
-static std::vector<std::string> PickaxePoolNames = {
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Anchor_Athena.WID_Harvest_Pickaxe_Anchor_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_ArtDeco.WID_Harvest_Pickaxe_ArtDeco",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Assassin.WID_Harvest_Pickaxe_Assassin",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_BoltOn_Athena_C_T01.WID_Harvest_Pickaxe_BoltOn_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Brite.WID_Harvest_Pickaxe_Brite",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Carrot.WID_Harvest_Pickaxe_Carrot",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_CircuitBreaker.WID_Harvest_Pickaxe_CircuitBreaker",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_CuChulainn.WID_Harvest_Pickaxe_CuChulainn",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Deathvalley_Athena_C_T01.WID_Harvest_Pickaxe_Deathvalley_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Disco_Athena.WID_Harvest_Pickaxe_Disco_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_District_Athena.WID_Harvest_Pickaxe_District_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Dragon.WID_Harvest_Pickaxe_Dragon",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Flamingo_Athena_C_T01.WID_Harvest_Pickaxe_Flamingo_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Heart_Athena.WID_Harvest_Pickaxe_Heart_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_HolidayCandyCane_Athena.WID_Harvest_Pickaxe_HolidayCandyCane_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_HolidayGiftWrap_Athena.WID_Harvest_Pickaxe_HolidayGiftWrap_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_IcePick_Athena_C_T01.WID_Harvest_Pickaxe_IcePick_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Keg_Athena.WID_Harvest_Pickaxe_Keg_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Lockjaw_Athena_C_T01.WID_Harvest_Pickaxe_Lockjaw_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Medieval_Athena.WID_Harvest_Pickaxe_Medieval_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Megalodon_Athena.WID_Harvest_Pickaxe_Megalodon_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_PajamaParty.WID_Harvest_Pickaxe_PajamaParty",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Pizza.WID_Harvest_Pickaxe_Pizza",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Plunger.WID_Harvest_Pickaxe_Plunger",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_PotOfGold.WID_Harvest_Pickaxe_PotOfGold",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Prismatic.WID_Harvest_Pickaxe_Prismatic",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_RockerPunk.WID_Harvest_Pickaxe_RockerPunk",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Scavenger.WID_Harvest_Pickaxe_Scavenger",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Shark_Athena.WID_Harvest_Pickaxe_Shark_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_SickleBat_Athena_C_T01.WID_Harvest_Pickaxe_SickleBat_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_SkiBoot.WID_Harvest_Pickaxe_SkiBoot",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Smiley_Athena_C_T01.WID_Harvest_Pickaxe_Smiley_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Space.WID_Harvest_Pickaxe_Space",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Spikey_Athena_C_T01.WID_Harvest_Pickaxe_Spikey_Athena_C_T01",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Squeak.WID_Harvest_Pickaxe_Squeak",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Stealth.WID_Harvest_Pickaxe_Stealth",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Tactical.WID_Harvest_Pickaxe_Tactical",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_TacticalBlack.WID_Harvest_Pickaxe_TacticalBlack",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_Teslacoil_Athena.WID_Harvest_Pickaxe_Teslacoil_Athena",
-    "/Game/Athena/Items/Weapons/WID_Harvest_Pickaxe_WinterCamo_Athena.WID_Harvest_Pickaxe_WinterCamo_Athena"
-};
-
 namespace Looting
 {
     std::vector<UFortWeaponRangedItemDefinition*> AthenaConsumables;
@@ -197,7 +154,6 @@ namespace Looting
     std::vector<UFortTrapItemDefinition*> TrapsPool;
     std::vector<UFortResourceItemDefinition*> ResourcesPool;
     std::vector<UFortAmmoItemDefinition*> AmmoPool;
-    std::vector<UFortWeaponMeleeItemDefinition*> PickaxePool;
 
     bool bInitialized = false;
 
@@ -275,12 +231,6 @@ namespace Looting
             if (Item)
                 AmmoPool.push_back(Item);
         }
-        for (int i = 0; i < PickaxePoolNames.size(); i++)
-        {
-            auto Item = Utils::FindObjectFast<UFortWeaponMeleeItemDefinition>(PickaxePoolNames[i]);
-            if (Item)
-                PickaxePool.push_back(Item);
-        }
 
         bInitialized = true;
         LOG_INFO("[Looting::Init] Initialized all loot pools.");
@@ -307,7 +257,6 @@ namespace Looting
         std::shuffle(TrapsPool.begin(), TrapsPool.end(), std::default_random_engine(seed));
         std::shuffle(ResourcesPool.begin(), ResourcesPool.end(), std::default_random_engine(seed));
         std::shuffle(AmmoPool.begin(), AmmoPool.end(), std::default_random_engine(seed));
-        std::shuffle(PickaxePool.begin(), PickaxePool.end(), std::default_random_engine(seed));
     }
 
     auto GetRandomAmmoDefinition()

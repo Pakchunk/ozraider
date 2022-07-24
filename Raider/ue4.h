@@ -22,11 +22,17 @@ inline bool bListening = false;
 static bool bSpawnedFloorLoot = false;
 static bool bMapFullyLoaded = false;
 
+UFortWeaponRangedItemDefinition* IniSlot2 = nullptr;
+UFortWeaponRangedItemDefinition* IniSlot3 = nullptr;
+UFortWeaponRangedItemDefinition* IniSlot4 = nullptr;
+UFortWeaponRangedItemDefinition* IniSlot5 = nullptr;
+UFortWeaponRangedItemDefinition* IniSlot6 = nullptr;
 std::map<EFortTeam, bool> teamsmap;
 bool hasSetup = false;
-bool bInfiniteAmmo = true;
+bool bInfiniteAmmo = false;
 int PlayersJumpedFromBus = 0;
 int TimesInGame = 0;
+float PlayerGravity = 1;
 static std::unordered_set<ABuildingSMActor*> Buildings;
 std::vector<ABuildingSMActor*> PlayerBuilds;
 static AFortOnlineBeaconHost* HostBeacon = nullptr;
@@ -262,6 +268,18 @@ inline auto CreateCheatManager(APlayerController* Controller)
         Controller->CheatManager = (UCheatManager*)GetGameplayStatics()->STATIC_SpawnObject(UFortCheatManager::StaticClass(), Controller); // lets just assume its gamemode athena
 
     return (UFortCheatManager*)Controller->CheatManager;
+}
+
+inline void RemovePlayerState(APlayerState* PlayerState)
+{
+    for (int i = 0; i < GameState->PlayerArray.Num(); i++)
+    {
+        if (GameState->PlayerArray[i] == PlayerState)
+        {
+            GameState->PlayerArray.RemoveAt(i, 1);
+            return;
+        }
+    }
 }
 
 DWORD WINAPI MapLoadThread(LPVOID) // thnak you mr rythm for giving me this
@@ -1132,10 +1150,12 @@ inline UFortWeaponRangedItemDefinition* FindWID(const std::string& WID, bool fas
     if (!Def)
     {
         Def = UObject::FindObject<UFortWeaponRangedItemDefinition>("WID_Harvest_" + WID + "_Athena_C_T01" + ".WID_Harvest_" + WID + "_Athena_C_T01");
-		
+
         if (!Def)
             Def = UObject::FindObject<UFortWeaponRangedItemDefinition>(WID + "." + WID);
     }
+
+    return Def;
 }
 
 void EquipLoadout(AFortPlayerControllerAthena* Controller, PlayerLoadout WIDS)
@@ -1473,14 +1493,6 @@ namespace Inventory // includes quickbars
         return false;
     }
 
-    inline bool GuidEquals(const FGuid &GuidA, const FGuid &GuidB)
-    {
-        if (GuidA.A == GuidB.A && GuidA.B == GuidB.B && GuidA.C == GuidB.C && GuidA.D == GuidB.D)
-            return true;
-
-        return false;
-    }
-
     inline auto GetSlotNumSecondary(AFortPlayerControllerAthena* PC, FGuid &Guid)
     {
 
@@ -1547,7 +1559,7 @@ namespace Inventory // includes quickbars
                             }
 
                             Inventory::RemoveItemFromSlot(Controller, FocusedSlot, EFortQuickBars::Primary);
-		 	    Inventory::Update(Controller, 0, true);
+                            Inventory::Update(Controller, 0, true);
                         }
 
 						int Idx = 0;

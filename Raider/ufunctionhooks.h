@@ -444,117 +444,6 @@ namespace UFunctionHooks
             return false;
         })
 
-        DEFINE_PEHOOK("Function FortniteGame.FortPlayerPawn.ServerReviveFromDBNO", {
-            auto Params = (AFortPlayerPawn_ServerReviveFromDBNO_Params*)Parameters;
-            auto DBNOPawn = (APlayerPawn_Athena_C*)Object;
-            auto DBNOPC = (AFortPlayerControllerAthena*)DBNOPawn->Controller;
-            auto InstigatorPC = (AFortPlayerControllerAthena*)Params->EventInstigator;
-
-            if (InstigatorPC && DBNOPawn && DBNOPC)
-            {
-                DBNOPawn->bIsDBNO = false;
-                DBNOPawn->OnRep_IsDBNO();
-
-                DBNOPC->ClientOnPawnRevived(InstigatorPC);
-                DBNOPawn->SetHealth(30);
-            }
-
-            return false;
-        })
-
-        DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerAttemptInteract", {
-            auto Params = (AFortPlayerController_ServerAttemptInteract_Params*)Parameters;
-            auto PC = (AFortPlayerControllerAthena*)Object;
-
-            if (Params->ReceivingActor)
-            {
-                auto DBNOPawn = (APlayerPawn_Athena_C*)Params->ReceivingActor;
-                auto DBNOPC = (AFortPlayerControllerAthena*)DBNOPawn->Controller;
-
-                if (DBNOPawn && DBNOPC && DBNOPawn->IsA(APlayerPawn_Athena_C::StaticClass()))
-                {
-                    DBNOPawn->ReviveFromDBNO(PC);
-                }
-            }
-
-            return false;
-        })
-        /*
-        DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerPlayEmoteItem", {
-            if (!Object->IsA(AFortPlayerControllerAthena::StaticClass()))
-                return false;
-
-            auto CurrentPC = (AFortPlayerControllerAthena*)Object;
-            auto CurrentPawn = (APlayerPawn_Athena_C*)CurrentPC->Pawn;
-
-            auto EmoteParams = (AFortPlayerController_ServerPlayEmoteItem_Params*)Parameters;
-            auto AnimInstance = (UFortAnimInstance*)CurrentPawn->Mesh->GetAnimInstance();
-
-            if (CurrentPC && !CurrentPC->IsInAircraft() && CurrentPawn && EmoteParams->EmoteAsset && AnimInstance && !AnimInstance->bIsJumping && !AnimInstance->bIsFalling)
-            {
-                // ((UFortCheatManager*)CurrentPC->CheatManager)->AthenaEmote(EmoteParams->EmoteAsset->Name.ToWString().c_str());
-                // CurrentPC->ServerEmote(EmoteParams->EmoteAsset->Name);
-                if (EmoteParams->EmoteAsset->IsA(UAthenaDanceItemDefinition::StaticClass()))
-                {
-                    if (auto Montage = EmoteParams->EmoteAsset->GetAnimationHardReference(CurrentPawn->CharacterBodyType, CurrentPawn->CharacterGender))
-                    {
-                        auto& RepAnimMontageInfo = CurrentPawn->RepAnimMontageInfo;
-                        auto& ReplayRepAnimMontageInfo = CurrentPawn->ReplayRepAnimMontageInfo;
-                        auto& RepCharPartAnimMontageInfo = CurrentPawn->RepCharPartAnimMontageInfo;
-                        auto& LocalAnimMontageInfo = CurrentPawn->AbilitySystemComponent->LocalAnimMontageInfo;
-                        auto Ability = CurrentPawn->AbilitySystemComponent->AllReplicatedInstancedAbilities[0];
-
-                        const auto Duration = AnimInstance->Montage_Play(Montage, 1.0f, EMontagePlayReturnType::Duration, 0.0f, true);
-
-                        if (Duration > 0.f)
-                        {
-                            ReplayRepAnimMontageInfo.AnimMontage = Montage;
-                            LocalAnimMontageInfo.AnimMontage = Montage;
-                            if (Ability)
-                            {
-                                LocalAnimMontageInfo.AnimatingAbility = Ability;
-                            }
-                            LocalAnimMontageInfo.PlayBit = 1;
-
-                            RepAnimMontageInfo.AnimMontage = Montage;
-                            RepAnimMontageInfo.ForcePlayBit = 1;
-
-                            RepCharPartAnimMontageInfo.PawnMontage = Montage;
-
-                            if (Ability)
-                            {
-                                Ability->CurrentMontage = Montage;
-                            }
-
-                            bool bIsStopped = AnimInstance->Montage_GetIsStopped(Montage);
-
-                            if (!bIsStopped)
-                            {
-                                RepAnimMontageInfo.PlayRate = AnimInstance->Montage_GetPlayRate(Montage);
-                                RepAnimMontageInfo.Position = AnimInstance->Montage_GetPosition(Montage);
-                                RepAnimMontageInfo.BlendTime = AnimInstance->Montage_GetBlendTime(Montage);
-                            }
-
-                            RepAnimMontageInfo.IsStopped = bIsStopped;
-                            RepAnimMontageInfo.NextSectionID = 0;
-
-                            // CurrentPawn->Mesh->SetAnimation(Montage);
-                            CurrentPawn->OnRep_ReplicatedMovement();
-                            CurrentPawn->OnRep_CharPartAnimMontageInfo();
-                            CurrentPawn->OnRep_ReplicatedAnimMontage();
-                            CurrentPawn->OnRep_RepAnimMontageStartSection();
-                            CurrentPawn->OnRep_ReplayRepAnimMontageInfo();
-                            CurrentPawn->ForceNetUpdate();
-
-							// Look into ACharacter::FRepRootMotionMontage
-                        }
-                    }
-                }
-            }
-
-            return false;
-        })
-        */
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerAttemptInventoryDrop", {
             auto PC = (AFortPlayerControllerAthena*)Object;
 
@@ -563,16 +452,6 @@ namespace UFunctionHooks
 
             return false;
         })
-
-        /*
-        DEFINE_PEHOOK("Function BP_VictoryDrone.BP_VictoryDrone_C.OnSpawnOutAnimEnded", {
-
-            if (IAmTheOneWhoSpectates && ToSpectatePlayerState)
-                Spectate(IAmTheOneWhoSpectates, ToSpectatePlayerState);
-
-            return false;
-        })
-        */
 
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerController.ServerExecuteInventoryItem", {
             EquipInventoryItem((AFortPlayerControllerAthena*)Object, *(FGuid*)Parameters);
@@ -611,20 +490,6 @@ namespace UFunctionHooks
 
         DEFINE_PEHOOK("Function FortniteGame.FortPlayerPawn.ServerChoosePart", 
         {
-            if (bCosmetics)
-            {
-                auto Params = (AFortPlayerPawn_ServerChoosePart_Params*)Parameters;
-                auto Pawn = (APlayerPawn_Athena_C*)Object;
-            
-                if (Params && Pawn)
-                {
-                    if (!Params->ChosenCharacterPart && Params->Part != EFortCustomPartType::Hat)
-                        return true;
-                }
-            
-                return false;
-            }
-
             return true;
         })
 
@@ -695,6 +560,6 @@ namespace UFunctionHooks
             return true;
         })
 
-        LOG_INFO("[+] Hooked %zu UFunction(s)\n", toHook.size());
+        LOG_INFO("[UFunctionHooks::Initialize] Hooked {} UFunction(s)", toHook.size());
     }
 }

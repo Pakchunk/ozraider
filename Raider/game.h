@@ -50,8 +50,11 @@ namespace Game
 
         GameMode->FriendlyFireType = EFriendlyFireType::Off;
 
+        if (!Looting::bInitialized)
+            Looting::Init();
+
         GameMode->StartPlay();
-        GameState->DefaultBattleBus = UObject::FindObject<UAthenaBattleBusItemDefinition>("AthenaBattleBusItemDefinition BBID_PurpleBus.BBID_PurpleBus");
+        //GameState->DefaultBattleBus = UObject::FindObject<UAthenaBattleBusItemDefinition>("AthenaBattleBusItemDefinition BBID_PurpleBus.BBID_PurpleBus");
         GameState->bReplicatedHasBegunPlay = true;
         GameState->OnRep_ReplicatedHasBegunPlay();
 
@@ -59,11 +62,40 @@ namespace Game
         GameMode->bAlwaysDBNO = false;
 
         GetWorld()->NetworkManager->NetCullDistanceSquared *= 3;
+    }
 
-        if (TimesInGame <= 1)
+    auto GetDeathReason(FFortPlayerDeathReport DeathReport)
+    {
+        static std::map<std::string, EDeathCause> DeathReasonMap {
+            { "weapon.ranged.shotgun", EDeathCause::Shotgun },
+            { "weapon.ranged.assault", EDeathCause::Rifle },
+            { "Gameplay.Damage.Environment.Falling", EDeathCause::FallDamage },
+            { "weapon.ranged.sniper", EDeathCause::Sniper },
+            { "Weapon.Ranged.SMG", EDeathCause::SMG },
+            { "weapon.ranged.heavy.rocket_launcher", EDeathCause::RocketLauncher },
+            { "weapon.ranged.heavy.grenade_launcher", EDeathCause::GrenadeLauncher },
+            { "Weapon.ranged.heavy.grenade", EDeathCause::Grenade },
+            { "Weapon.Ranged.Heavy.Minigun", EDeathCause::Minigun },
+            { "Weapon.Ranged.Crossbow", EDeathCause::Bow },
+            { "trap.floor", EDeathCause::Trap },
+            { "weapon.ranged.pistol", EDeathCause::Pistol },
+            { "Gameplay.Damage.OutsideSafeZone", EDeathCause::OutsideSafeZone },
+            { "Weapon.Melee.Impact.Pickaxe", EDeathCause::Melee }
+        };
+
+        for (int i = 0; i < DeathReport.Tags.GameplayTags.Num(); i++)
         {
-            if (!Looting::bInitialized)
-                Looting::Init();
+            auto nameTag = DeathReport.Tags.GameplayTags[i].TagName.ToString();
+
+            for (auto Map : DeathReasonMap)
+            {
+                if (nameTag == Map.first)
+                    return Map.second;
+                else
+                    continue;
+            }
         }
+
+        return EDeathCause::Unspecified;
     }
 }

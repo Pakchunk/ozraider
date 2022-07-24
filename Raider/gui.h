@@ -21,11 +21,11 @@ bool bReadyToStart = false;
 bool bStormPaused = false;
 bool bRestart = false;
 bool bSafeZoneBased = false;
-bool bLooting = false;
+bool bLooting = true;
+bool bFloorLoot = false;
 
 FVector BusLocation;
 // pregame
-bool bCosmetics = true;
 bool bLoadoutRandom = false;
 bool bLoadoutIni = false;
 bool bLoadoutExplosives = false;
@@ -155,7 +155,7 @@ namespace GUI
                 static int PlayerIndex = -1;
 
                 // This is bad, but works for now.
-                if (PlayerIndex != -1 && GameState->PlayerArray[PlayerIndex] != nullptr)
+                if (PlayerIndex != -1 && HostBeacon->NetDriver->ClientConnections[PlayerIndex] != nullptr)
                 {
                     if (ZeroGUI::Button(L"<", { 25.0f, 25.0f }))
                     {
@@ -169,12 +169,12 @@ namespace GUI
                     {
                         ZeroGUI::NextColumn(90.0f);
 
-                        ZeroGUI::Text(std::format(L"Current Player: {}", GameState->PlayerArray[PlayerIndex]->GetPlayerName().c_str()).c_str());
+                        ZeroGUI::Text(std::format(L"Current Player: {}", HostBeacon->NetDriver->ClientConnections[PlayerIndex]->PlayerController->PlayerState->GetPlayerName().c_str()).c_str());
 
                         if (ZeroGUI::Button(L"Kick", { 60.0f, 25.0f }))
                         {
                             static std::wstring Reason(Utils::Ini().Get("Players", "DefaultKickText", "You have been kicked by the server.").begin(), Utils::Ini().Get("Players", "DefaultKickText", "You have been kicked by the server.").end());
-                            KickController((APlayerController*)GameState->PlayerArray[PlayerIndex]->Owner, Reason.c_str());
+                            KickController(HostBeacon->NetDriver->ClientConnections[PlayerIndex]->PlayerController, Reason.c_str());
 
                             mtx.lock();
                             PlayerIndex = -1;
@@ -185,17 +185,41 @@ namespace GUI
                         {
                             for (auto build : PlayerBuilds)
                             {
-                                if (build->Team == ((AFortPlayerStateAthena*)GameState->PlayerArray[PlayerIndex])->TeamIndex)
+                                if (build->Team == ((AFortPlayerStateAthena*)HostBeacon->NetDriver->ClientConnections[PlayerIndex]->PlayerController->PlayerState)->TeamIndex)
                                     build->K2_DestroyActor();
                                 else
                                     continue;
                             }
                         }
 
+                        if (ZeroGUI::Button(L"Force Win", {60,25}))
+                        {
+                            auto WinnerState = (AFortPlayerStateAthena*)HostBeacon->NetDriver->ClientConnections[PlayerIndex]->PlayerController->PlayerState;
+                            auto WinnerPawn = (AFortPlayerPawnAthena*)WinnerState->GetCurrentPawn();
+                            auto WinnerPC = (AFortPlayerControllerAthena*)WinnerPawn->Controller;
+                            if (!WinnerPC->IsClientNotifiedOfWin())
+                            {
+                                auto GameMode = (AFortGameModeAthena*)GameState->AuthorityGameMode;
+                                GameState->WinningPlayerName = WinnerState->PlayerName;
+                                GameState->OnRep_WinningPlayerName();
+                                GameMode->ReadyToEndMatch();
+                                GameMode->EndMatch();
+
+                                reinterpret_cast<UFortCheatManager*>(WinnerPawn->Controller)->AthenaForceVictory(true);
+                                WinnerPC->ClientNotifyWon();
+                                WinnerPC->ClientNotifyTeamWon();
+                                WinnerPC->PlayWinEffects();
+                                WinnerPC->bClientNotifiedOfWin = true;
+                                WinnerPC->bClientNotifiedOfTeamWin = true;
+                                WinnerState->bHasWonAGame = true;
+                                WinnerPC->ClientGameEnded(WinnerPawn, true);
+                            }
+                        }
+
                         if (bHideAndSeek)
                         {
                             if (ZeroGUI::Button(L"Make Seeker?", { 60.0f, 25.0f }))
-                                Seeker = (AFortPlayerStateAthena*)GameState->PlayerArray[PlayerIndex];
+                                Seeker = (AFortPlayerStateAthena*)HostBeacon->NetDriver->ClientConnections[PlayerIndex]->PlayerController->PlayerState;
                         }
                     }
                 }
@@ -217,7 +241,7 @@ namespace GUI
                         {
                             if (ZeroGUI::Button(L"Start Bus", FVector2D { 100, 25 }))
                             {
-                                if (GameState->PlayerArray.Num() <= 0)
+                                if (HostBeacon->NetDriver->ClientConnections.Num() <= 0)
                                     return;
 
                                 if (!bBusOnLocations)
@@ -298,6 +322,26 @@ namespace GUI
                             Actors.FreeArray();
                         }
 
+                        if (bFloorLoot)
+                        {
+                            if (ZeroGUI::Button(L"Spawn Floor Loot (UNSTABLE)", FVector2D { 135, 25 }))
+                            {
+                                bFloorLoot = false;
+                                static auto FloorLoot = UObject::FindClass("BlueprintGeneratedClass Tiered_Athena_FloorLoot_01.Tiered_Athena_FloorLoot_01_C");
+                                TArray<AActor*> Actors;
+                                GetGameplayStatics()->STATIC_GetAllActorsOfClass(GetWorld(), FloorLoot, &Actors);
+                                for (int i = 0; i < Actors.Num(); i++)
+                                {
+                                    auto Loc = Actors[i]->K2_GetActorLocation();
+                                    Actors[i]->K2_DestroyActor();
+                                    auto Loot = Looting::GetWeapon();
+                                    SummonPickup(nullptr, Loot, 1, Loc);
+                                    SummonPickup(nullptr, Loot->GetAmmoWorldItemDefinition_BP(), ((UFortAmmoItemDefinition*)Loot->GetAmmoWorldItemDefinition_BP())->DropCount, Loc);
+                                }
+                                Actors.FreeArray();
+                            }
+                        }
+
                         if (ZeroGUI::Button(L"Stop Server", FVector2D {100,25}))
                         {
                             bRestart = true;
@@ -307,13 +351,13 @@ namespace GUI
                     }
                     case 1:
                     {
-                        std::wstring ConnectedPlayers = std::format(L"Connected Players: {}\n", GameState->PlayerArray.Num());
+                        std::wstring ConnectedPlayers = std::format(L"Connected Players: {}\n", HostBeacon->NetDriver->ClientConnections.Num());
 
                         ZeroGUI::Text(ConnectedPlayers.c_str());
 
-                        for (auto i = 0; i < GameState->PlayerArray.Num(); i++)
+                        for (auto i = 0; i < HostBeacon->NetDriver->ClientConnections.Num(); i++)
                         {
-                            auto PlayerState = GameState->PlayerArray[i];
+                            auto PlayerState = HostBeacon->NetDriver->ClientConnections[i]->PlayerController->PlayerState;
                             if (PlayerState)
                             {
                                 if (ZeroGUI::Button(PlayerState->GetPlayerName().c_str(), { 100, 25 }))
@@ -329,7 +373,7 @@ namespace GUI
                         {
                             if (ZeroGUI::Button(L"Choose Random Seeker", { 100, 25 }))
                             {
-                                Seeker = (AFortPlayerStateAthena*)GameState->PlayerArray[rand() % GameState->PlayerArray.Num()];
+                                Seeker = (AFortPlayerStateAthena*)HostBeacon->NetDriver->ClientConnections[rand() % HostBeacon->NetDriver->ClientConnections.Num()]->PlayerController->PlayerState;
                             }
                         }
 
@@ -346,21 +390,26 @@ namespace GUI
                     {
                         bReadyToStart = true;
                         ((AFortGameModeAthena*)GetWorld()->AuthorityGameMode)->ReadyToStartMatch();
-                        if (bHideAndSeek)
+                        PlayerGravity = Utils::Ini().GetFloat("PlayerPawn", "GravityScale", 1);
+                        if (loadoutToUse == WeaponLoadout::INI)
                         {
-                            bBusOnLocations = true;
-                            bSafeZoneBased = true;
+                            IniSlot2 = FindWID(Utils::Ini().Get("Inventory", "Slot2", "nullptr"), false);
+                            IniSlot3 = FindWID(Utils::Ini().Get("Inventory", "Slot3", "nullptr"), false);
+                            IniSlot4 = FindWID(Utils::Ini().Get("Inventory", "Slot4", "nullptr"), false);
+                            IniSlot5 = FindWID(Utils::Ini().Get("Inventory", "Slot5", "nullptr"), false);
+                            IniSlot6 = FindWID(Utils::Ini().Get("Inventory", "Slot6", "nullptr"), false);
                         }
+                        bBusOnLocations = bHideAndSeek;
+                        bSafeZoneBased = bHideAndSeek;
                     }
                     ZeroGUI::Text(L"Game", false, true);
-                    ZeroGUI::Checkbox(L"Playground GameMode?", &bPlayground);
+                    ZeroGUI::Checkbox(L"Playground GameMode? (Most Stable)", &bPlayground);
                     ZeroGUI::Checkbox(L"Hide & Seek GameMode?", &bHideAndSeek);
                     if (bPlayground)
                         bHideAndSeek = false;
                     if (bHideAndSeek)
                         bPlayground = false;
                     ZeroGUI::Text(L"Player Loadout", false, true);
-                    ZeroGUI::Checkbox(L"Allow Cosmetics?", &bCosmetics);
                     ZeroGUI::Checkbox(L"Infinite Ammo?", &bInfiniteAmmo);
                     ZeroGUI::Checkbox(L"Random Loadout", &bLoadoutRandom);
                     ZeroGUI::Checkbox(L"Loadout From Ini", &bLoadoutIni);
@@ -401,7 +450,6 @@ namespace GUI
                         bLoadoutIni = false;
                         bLoadoutExplosives = false;
                     }
-
                 }
                 else
                 {

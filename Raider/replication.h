@@ -205,6 +205,18 @@ namespace Replication
                     if (Actor->IsA(APlayerController::StaticClass()) && Actor != Connection->PlayerController)
                         continue;
 
+                    // TODO: Proper relevancy/dormancy so this isnt needed.
+                    if (Actor->IsA(AFortPickup::StaticClass()) || Actor->IsA(AFortPickupEffect::StaticClass()))
+                    {
+                        if (!Connection->ViewTarget)
+                            continue;
+
+                        if (Connection->ViewTarget->GetDistanceTo(Actor) >= 15520)
+                            continue; 
+
+                        //LOG_INFO("Replicating FortPickup!");
+                    }
+
                     auto Channel = FindChannel(Actor, Connection);
 
                     if (!Channel)
