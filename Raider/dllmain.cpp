@@ -33,6 +33,7 @@ DWORD WINAPI Main(LPVOID lpParam)
     
     DetourAttachE(NetDebug, Hooks::NetDebug);
     DetourAttachE(ProcessEvent, Hooks::ProcessEventHook);
+    DetourAttachE(Native::PlayerController::GetPlayerViewPoint, Hooks::GetPlayerViewPoint);
     DETOUR_END
 
     LOG_INFO("[LogRaider] Hooked ProcessEvent");

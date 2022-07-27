@@ -79,6 +79,27 @@ namespace Hooks
     void PostRender(UGameViewportClient* _this, UCanvas* Canvas) { ZeroGUI::SetupCanvas(Canvas); GUI::Tick(); Native::GameViewportClient::PostRender(_this, Canvas); }
     __int64 CollectGarbage(__int64 a1) { return 0; };
 
+    void __fastcall GetPlayerViewPoint(APlayerController* pc, FVector* a2, FRotator* a3) // credit: ender
+    {
+        if (HostBeacon->NetDriver->ClientConnections.Num() > 0)
+        {
+            AActor* TheViewTarget = pc->GetViewTarget();
+
+            if (TheViewTarget)
+            {
+                *a2 = TheViewTarget->K2_GetActorLocation();
+                *a3 = TheViewTarget->K2_GetActorRotation();
+                // LOG_INFO("Did the ViewTarget!");
+
+                return;
+            }
+            else
+                LOG_INFO("Unable to get ViewTarget!");
+        }
+        else
+            return Native::PlayerController::GetPlayerViewPoint(pc, a2, a3);
+    }
+
     void* OnReloadHook(AFortWeapon* a1, int a2)// cr: averymadness
     {
         if (!bInfiniteAmmo)
