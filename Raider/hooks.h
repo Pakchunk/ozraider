@@ -13,11 +13,12 @@ namespace Hooks
         if (!NetDriver)
             return;
 
-		if (bMapFullyLoaded)
+        if (NetDriver->IsA(UIpNetDriver::StaticClass()) && NetDriver->ClientConnections.Num() > 0 && NetDriver->ClientConnections[0]->InternalAck == false)
         {
-            if (NetDriver->IsA(UIpNetDriver::StaticClass()) && NetDriver->ClientConnections.Num() > 0 && NetDriver->ClientConnections[0]->InternalAck == false)
+            // Replication::ServerReplicateActors(NetDriver);
+            if (NetDriver->ReplicationDriver)
             {
-                Replication::ServerReplicateActors(NetDriver);
+                Native::ReplicationDriver::ServerReplicateActors(NetDriver->ReplicationDriver);
             }
         }
 

@@ -56,54 +56,25 @@ inline AAthena_PlayerController_C* GetPlayerController(int32 Index = 0)
     return (AAthena_PlayerController_C*)GetWorld()->OwningGameInstance->LocalPlayers[Index]->PlayerController;
 }
 
-struct FNetworkObjectInfo
-{
-    AActor* Actor;
-
-    TWeakObjectPtr<AActor> WeakActor;
-
-    double NextUpdateTime;
-
-    double LastNetReplicateTime;
-
-    float OptimalNetUpdateDelta;
-
-    float LastNetUpdateTime;
-
-    uint32 bPendingNetUpdate : 1;
-
-    uint32 bForceRelevantNextUpdate : 1;
-
-    TSet<TWeakObjectPtr<UNetConnection>> DormantConnections;
-
-    TSet<TWeakObjectPtr<UNetConnection>> RecentlyDormantConnections;
-
-    bool operator==(const FNetworkObjectInfo& Other)
-    {
-        return Actor == Other.Actor;
-    }
-};
-
-class FNetworkObjectList
+struct FObjectKey
 {
 public:
-    using FNetworkObjectSet = TSet<TSharedPtr<FNetworkObjectInfo>>;
+    UObject* ResolveObjectPtr() const
+    {
+        FWeakObjectPtr WeakPtr;
+        WeakPtr.ObjectIndex = ObjectIndex;
+        WeakPtr.ObjectSerialNumber = ObjectSerialNumber;
 
-    FNetworkObjectSet AllNetworkObjects;
-    FNetworkObjectSet ActiveNetworkObjects;
-    FNetworkObjectSet ObjectsDormantOnAllConnections;
+        return WeakPtr.Get();
+    }
 
-    TMap<TWeakObjectPtr<UObject>, int32> NumDormantObjectsPerConnection;
+    int32 ObjectIndex;
+    int32 ObjectSerialNumber;
 };
 
-FORCEINLINE int32& GetReplicationFrame(UNetDriver* Driver)
+FORCEINLINE auto& GetClassRepNodePolicies(UObject* ReplicationDriver)
 {
-    return *(int32*)(int64(Driver) + 816); // Offsets::Net::ReplicationFrame);
-}
-
-FORCEINLINE auto& GetNetworkObjectList(UObject* NetDriver)
-{
-    return *(*(TSharedPtr<FNetworkObjectList>*)(int64(NetDriver) + 0x508));
+    return *reinterpret_cast<TMap<FObjectKey, EClassRepNodeMapping>*>(__int64(ReplicationDriver) + 0x3B8);
 }
 
 FORCEINLINE UGameplayStatics* GetGameplayStatics()

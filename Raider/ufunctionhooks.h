@@ -3,7 +3,6 @@
 #include <functional>
 
 #include "game.h"
-#include "replication.h"
 #include "ue4.h"
 
 // #define LOGGING
@@ -494,8 +493,6 @@ namespace UFunctionHooks
         })
 
         DEFINE_PEHOOK("Function Engine.GameMode.ReadyToStartMatch", {
-
-
             if (!bListening)
             {
                 if (!bReadyToStart)
@@ -505,27 +502,52 @@ namespace UFunctionHooks
                 Game::OnReadyToStartMatch();
 
                 HostBeacon = SpawnActor<AFortOnlineBeaconHost>();
-                HostBeacon->ListenPort = 7777;
+                HostBeacon->ListenPort = 7776;
                 auto bInitBeacon = Native::OnlineBeaconHost::InitHost(HostBeacon);
                 CheckNullFatal(bInitBeacon, "Failed to initialize the Beacon!");
 
                 HostBeacon->NetDriverName = FName(282); // REGISTER_NAME(282,GameNetDriver)
                 HostBeacon->NetDriver->NetDriverName = FName(282); // REGISTER_NAME(282,GameNetDriver)
                 HostBeacon->NetDriver->World = GetWorld();
+                FString Error;
+                auto InURL = FURL();
+                InURL.Port = 7777;
+
+                Native::NetDriver::InitListen(HostBeacon->NetDriver, GetWorld(), InURL, true, Error);
+
+                Native::ReplicationDriver::ServerReplicateActors = decltype(Native::ReplicationDriver::ServerReplicateActors)(HostBeacon->NetDriver->ReplicationDriver->Vtable[0x53]);
+
+                auto ClassRepNodePolicies = GetClassRepNodePolicies(HostBeacon->NetDriver->ReplicationDriver);
+
+                for (auto&& Pair : ClassRepNodePolicies)
+                {
+                    auto key = Pair.Key().ResolveObjectPtr();
+                    auto& value = Pair.Value();
+
+                    LOG_INFO("ClassRepNodePolicies: {} - {}", key->GetName(), ClassRepNodeMappingToString(value));
+
+                    if (key == AFortInventory::StaticClass())
+                    {
+                        value = EClassRepNodeMapping::RelevantAllConnections;
+                        LOG_INFO("Found ClassRepNodePolicy for AFortInventory! {}", (int)value);
+                    }
+
+                    if (key == AFortQuickBars::StaticClass())
+                    {
+                        value = EClassRepNodeMapping::RelevantAllConnections;
+                        LOG_INFO("Found ClassRepNodePolicy for AFortQuickBars! {}", (int)value);
+                    }
+                }
 
                 GetWorld()->NetDriver = HostBeacon->NetDriver;
                 GetWorld()->LevelCollections[0].NetDriver = HostBeacon->NetDriver;
                 GetWorld()->LevelCollections[1].NetDriver = HostBeacon->NetDriver;
 
-                // Native::OnlineBeacon::PauseBeaconRequests(HostBeacon, false);
+                GetWorld()->AuthorityGameMode->GameSession->MaxPlayers = MAXPLAYERS;
 
-                CreateThread(0, 0, MapLoadThread, 0, 0, 0);
-
-                auto GameState = (AAthena_GameState_C*)GetWorld()->GameState;
-
-                ((AAthena_GameMode_C*)GetWorld()->AuthorityGameMode)->GameSession->MaxPlayers = MAXPLAYERS;
+                Native::OnlineBeacon::PauseBeaconRequests(HostBeacon, false);
                 bListening = true;
-                LOG_INFO("[LogRaider] Listening on port {}", HostBeacon->ListenPort);
+                LOG_INFO("Listening for connections on port {}!", HostBeacon->ListenPort);
             }
 
             return false;

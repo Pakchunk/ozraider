@@ -30,6 +30,7 @@ namespace Game
 
         GameMode->bDisableGCOnServerDuringMatch = true;
         GameMode->bAllowSpectateAfterDeath = true;
+        GameMode->bEnableReplicationGraph = true;
 
         GameMode->MatchState = InProgress;
         GameMode->K2_OnSetMatchState(InProgress);
@@ -61,7 +62,6 @@ namespace Game
         GameMode->StartMatch();
         GameMode->bAlwaysDBNO = false;
 
-        GetWorld()->NetworkManager->NetCullDistanceSquared *= 3;
     }
 
     auto GetDeathReason(FFortPlayerDeathReport DeathReport)
